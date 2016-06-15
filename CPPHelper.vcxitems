@@ -18,4 +18,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)handle.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)ReadMe.txt" />
+  </ItemGroup>
 </Project>
