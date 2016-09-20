@@ -1,6 +1,25 @@
 
 
-CPPHelper 是一个C++基础辅助类库，目的在于更加高效、安全的进行开发。目前该类库有以下几个功能：
+CPPHelper 是一个C++基础辅助类库，目的在于更加高效、安全的进行开发。
+
+
+使用方法：
+1：将CPPHelper复制到工程目录
+
+比如D:\Visual Studio 2015\Projects\MySln\CPPHelper (MySln是我需要编译的工程)
+
+2：在VC++目录  -- 包含路径 添加 $(SolutionDir)CPPHelper\
+3：在 VC++目录 -- 库目录   添加 $(SolutionDir)CPPHelper\$(PlatformShortName)\
+
+4：在stdafx.h 中添加 #include <BaseFunction.h>
+5：在stdafx.cpp 中添加 #include <BaseFunction.cpp>
+
+至此，基础类库已经可以正常使用，另外其他Thread等类，请自行在使用时 include
+
+
+
+
+目前该类库有以下几个功能：
 
 //////////////////////////////////////////////////rapidxml///////////////////////////////////////////////////////////
 这是我修改后的一个rapidxml库，所有规范与原版的rapidxml一样，但是此版本完整支持UTF8以及UTF16。并且在执行print时提供了更佳性能。
