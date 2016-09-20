@@ -29,7 +29,7 @@ CPPHelper 是一个C++基础辅助类库，目的在于更加高效、安全的进行开发。
 
 rapidxml::XMLDocument Document;
 
-//从一个文件路径打开xml，指定进行编码判断
+//从一个文件路径打开xml，自动进行编码判断
 XMLCreateXMLDocumentByFile(L"D:\test.xml",&Document);
 
 
@@ -87,7 +87,7 @@ Task：
 
 Task([]()
 {
-	/*你需要异步执行的命令，Thread类自动会完成句柄释放。
+	/*你需要异步执行的命令。
 	这里是一个Lambda表达式，你可以参考Lambda表达式的使用。
 	*/
 });
@@ -108,10 +108,10 @@ WorkPool.SetThreadMaximum(10);
 int Datas[100];
 
 
-WorkPool.For(Data,10,[](int& Data)
+WorkPool.For(Data,100,[](int& Data)
 {
 	//10线程并发输出Datas中的内容
-    wprinf(L"%d\r\n",Data);
+	wprinf(L"%d\r\n",Data);
 });
 
 
