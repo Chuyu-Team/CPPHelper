@@ -14,11 +14,60 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Base.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseFunction.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)CabinetHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ComHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DiskHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Guard.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)handle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)IniHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)km.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageRecord.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\Enumerations.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\FileExtent.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\IcbTag.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LogicalBlockAddress.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LogicalVolume.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LongAllocationDescriptor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\Partition.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\ShortAllocationDescriptor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileExtent.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileInformation.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileSet.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfRecord.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfString.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfTime.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\VolumeTag.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_iterators.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_print.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_utils.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)RegHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)StringHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)StringI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)VirtDiskHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)XMLHelper.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)rapidxml\license.txt" />
     <Text Include="$(MSBuildThisFileDirectory)ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)rapidxml\manual.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Base.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)BaseFunction.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)FileHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)IniHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)RegHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)XMLHelper.cpp" />
   </ItemGroup>
 </Project>
