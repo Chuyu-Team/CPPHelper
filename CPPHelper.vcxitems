@@ -46,6 +46,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_print.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)RegHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)StreamEx.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)StringHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)StringI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
