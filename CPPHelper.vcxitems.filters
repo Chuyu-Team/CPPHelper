@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml.hpp">
+      <Filter>rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_iterators.hpp">
+      <Filter>rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_print.hpp">
+      <Filter>rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)rapidxml\rapidxml_utils.hpp">
+      <Filter>rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageReader.h">
+      <Filter>MsIsoReader</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageRecord.h">
+      <Filter>MsIsoReader</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\Enumerations.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\FileExtent.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\IcbTag.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LogicalBlockAddress.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LogicalVolume.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\LongAllocationDescriptor.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\Partition.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\ShortAllocationDescriptor.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileExtent.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileInformation.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfFileSet.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfRecord.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfString.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\UdfTime.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\VolumeTag.h">
+      <Filter>MsIsoReader\Udf</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)BaseFunction.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)CabinetHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)ComHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)DiskHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Guard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)handle.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)IniHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)RegHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)StringHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)StringI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)VirtDiskHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)XMLHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)km.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)ReadMe.txt" />
+    <Text Include="$(MSBuildThisFileDirectory)rapidxml\license.txt">
+      <Filter>rapidxml</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="rapidxml">
+      <UniqueIdentifier>{baa830b4-9789-4386-85ba-47427ed2e5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MsIsoReader">
+      <UniqueIdentifier>{4b82542d-3208-4e1f-9872-760ecb7cc910}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MsIsoReader\Udf">
+      <UniqueIdentifier>{fa2e6278-35e2-4f1c-8812-b3b912c97ec3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{835fbe91-f796-4e90-ae19-e12602c737f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{9c04e9a9-2040-4c84-9baa-03730ec86a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{55e67db0-1fcf-4d87-a5f8-aa505e3d8079}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\x64">
+      <UniqueIdentifier>{105b0678-c0e0-40d9-b367-57f9343cb191}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\x86">
+      <UniqueIdentifier>{0633ec94-703d-4edc-b92b-1bfe70aa9534}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)rapidxml\manual.html">
+      <Filter>rapidxml</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Base.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)BaseFunction.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)FileHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)IniHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)RegHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)XMLHelper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)x64\ntdll.lib">
+      <Filter>lib\x64</Filter>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)x86\ntdll.lib">
+      <Filter>lib\x86</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
