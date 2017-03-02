@@ -31,6 +31,15 @@
 #define DISM_MSG_PROGRESS   38008     //进度信息wParam为当前完成百分比
 
 
+#ifdef ENABLE_BACKUP_RESTORE
+#define FILE_OPTION FILE_FLAG_BACKUP_SEMANTICS
+#define REG_OPTION REG_OPTION_BACKUP_RESTORE
+#else
+#define FILE_OPTION 0
+#define REG_OPTION 0
+#endif
+
+
 typedef DWORD(WINAPI *BaseCallBack)(DWORD MessageId, WPARAM wParam, LPARAM lParam, PVOID UserData);
 
 
@@ -96,6 +105,8 @@ HANDLE OpenDriver(LPCWSTR DriverPath, DWORD dwDesiredAccess = GENERIC_READ);
 
 HRESULT GetDriverLayout(HANDLE hDevice, CStringA &Buffer/*DRIVE_LAYOUT_INFORMATION_EX+ n * PARTITION_INFORMATION_EX*/);
 
+HRESULT GetDriverLayout(LPCWSTR DriverPath, CStringA& Buffer);
+
 int GetPartitionDisk(HANDLE hDevice);
 
 HRESULT GetPartitionInfomation(HANDLE hDevice, PARTITION_INFORMATION_EX& PartitionInfo);
@@ -106,7 +117,7 @@ HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath);
 
 HRESULT GetVhdVolumeFilePath(LPCWSTR hDevicePath, CString& VHDFilePath);
 
-DWORD GetDiskCount();
+HRESULT GetDiskCount(std::vector<CString>& pszDevicePath);
 
 
 byte* IsProcExists(byte* pBase, LPCSTR ProcName);
@@ -127,6 +138,7 @@ HRESULT LoadString(LPCWSTR FilePath, int Index, LPBSTR pString);
 
 //HRESULT LoadString(HMODULE hModule,DWORD Index,CString& String);
 
+#define IMAGE_FIRST_DIRECTORY(ntheader) (IMAGE_DATA_DIRECTORY*)((byte*)IMAGE_FIRST_SECTION(ntheader)-sizeof(IMAGE_DATA_DIRECTORY)*IMAGE_NUMBEROF_DIRECTORY_ENTRIES)
 
 //PROCESSOR_ARCHITECTURE_UNKNOWN
 DWORD GetFileArchitecture(LPCWSTR FilePath);

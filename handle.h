@@ -23,6 +23,8 @@ class ClassName\
 //关闭句柄形式2，函数返回BOOL值，并通过GetLastError返回错误代码
 #define TCloseHandle2(_TCloseHandle) _TCloseHandle(hHandle) ? S_OK : GetLastError()
 
+//关闭句柄形式2，没有任何返回值
+#define TCloseHandle3(_TCloseHandle) (_TCloseHandle(hHandle),S_OK)
 
 //用于关闭RegOpenKey打开的句柄
 DefHandle(CHKEY, HKEY, NULL, TCloseHandle1(RegCloseKey))
@@ -46,4 +48,9 @@ typedef CHMutex CHProcess;
 
 #ifdef _WIMGAPI_H_
 DefHandle(CHWim, HANDLE, NULL, TCloseHandle2(WIMCloseHandle))
+#endif
+
+
+#ifdef _INC_SETUPAPI
+DefHandle(CHINF, HINF, INVALID_HANDLE_VALUE, TCloseHandle3(SetupCloseInfFile))
 #endif

@@ -28,11 +28,11 @@ if(((T*)this)->QueryMap(riid,ppvObject)==S_OK) return S_OK;
 
 
 
-template <class Base,class T>
-class IUnknownT : public T
+template <class T,class Base>
+class IUnknownT : public Base
 {
 private:
-	ULONG RefCount;
+	volatile ULONG RefCount;
 //protected:
 //	virtual HRESULT MyQueryInterface(REFIID riid, void __RPC_FAR *__RPC_FAR *ppvObject)
 //	{
@@ -57,32 +57,30 @@ public:
 		return E_NOINTERFACE;
 	}
 
-	_QueryMapBegin(Base)
+	_QueryMapBegin(T)
 		__QueryInterface(IUnknown);
-		__QueryInterface(T);
+		__QueryInterface(Base);
 	_QueryMapEnd
 
 	virtual ULONG STDMETHODCALLTYPE AddRef()
 	{
-		return ++RefCount;
+		return InterlockedIncrement(&RefCount);
 	}
 
 	virtual ULONG STDMETHODCALLTYPE Release()
 	{
-		if (--RefCount)
+		ULONG dwRet = InterlockedDecrement(&RefCount);
+		if (dwRet==0)
 		{
-			return RefCount;
+			delete (T*)this;
 		}
-		else
-		{
-			delete (Base*)this;
-			return 0;
-		}
+
+		return dwRet;
 	}
 };
 
-template <class Base,class T, class ItemType>
-class ICollectionT :public IUnknownT<Base,T>
+template <class T,class Base, class ItemType>
+class ICollectionT :public IUnknownT<T, Base>
 {
 	
 public:
@@ -121,7 +119,9 @@ public:
 		if (Index < 0 || Index >= m_Collection.size())
 			return E_INVALIDARG;
 
-		return m_Collection[Index]->QueryInterface(pvar);
+		(*pvar = (ItemType*)m_Collection[Index])->AddRef();
+
+		return S_OK;
 	}
 
 	virtual HRESULT WINAPI get__NewEnum(_Out_ IUnknown** ppUnk)

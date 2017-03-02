@@ -189,7 +189,7 @@ NTSTATUS DeleteDirectory(LPCWSTR Path, BOOL DeleteRootPath)
 //获取文件物理大小
 UINT64 GetFileAllocationSize(LPCWSTR FilePath)
 {
-	HANDLE hFile = CreateFileW(FilePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+	HANDLE hFile = CreateFile(FilePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	FILE_STANDARD_INFORMATION info = { 0 };
 
@@ -336,7 +336,7 @@ HRESULT CompressFile(LPCWSTR FilePath)
 	USHORT Type = COMPRESSION_FORMAT_XPRESS_HUFF; //设置为极限压缩
 	DWORD BytesReturned;
 
-	HANDLE hFile = CreateFileW(FilePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+	HANDLE hFile = CreateFile(FilePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
@@ -683,7 +683,7 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 	IO_STATUS_BLOCK IoStatusBlock;
 
 
-	auto Status = NtOpenFile(&hExistingFile, SYNCHRONIZE | FILE_LIST_DIRECTORY, &ExistingDirectoryPath, &IoStatusBlock, FILE_SHARE_VALID_FLAGS, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
+	auto Status = NtOpenFile(&hExistingFile, SYNCHRONIZE | FILE_LIST_DIRECTORY| FILE_READ_ATTRIBUTES, &ExistingDirectoryPath, &IoStatusBlock, FILE_SHARE_VALID_FLAGS, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
 
 	if (Status)
 		goto Error2;
@@ -691,7 +691,7 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 
 	HANDLE hNewFile;
 
-	Status = NtCreateFile(&hNewFile, SYNCHRONIZE | FILE_LIST_DIRECTORY, &NewDirectoryPath, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_VALID_FLAGS, FILE_OPEN_IF, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT, NULL, NULL);
+	Status = NtCreateFile(&hNewFile, SYNCHRONIZE | FILE_LIST_DIRECTORY| FILE_WRITE_ATTRIBUTES, &NewDirectoryPath, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_VALID_FLAGS, FILE_OPEN_IF, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT, NULL, NULL);
 
 	if (Status)
 		goto Error1;
@@ -710,7 +710,7 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 
 	byte FileBuffer[1024];
 
-
+	FILE_BASIC_INFORMATION BaseInfo;
 	while (ZwQueryDirectoryFile(hExistingFile, NULL, NULL, NULL, &IoStatusBlock, Buffer, sizeof(Buffer), FileFullDirectoryInformation, -1, NULL, 0) == ERROR_SUCCESS)
 	{
 		TempFileName.Length = TempFileName.MaximumLength = FileInfo.FileNameLength;
@@ -756,9 +756,20 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 				WriteFile(hNewFile, FileBuffer, cbData, &cbData, NULL);
 			}
 
+			if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation)==0)
+			{
+				NtSetInformationFile(hNewFile,&IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
+			}
+
+
 			NtClose(hNewFile);
 			NtClose(hExistingFile);
 		}
+	}
+
+	if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation) == 0)
+	{
+		NtSetInformationFile(hNewFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
 	}
 
 	NtClose(hNewFile);

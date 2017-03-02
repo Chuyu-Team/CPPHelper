@@ -49,12 +49,12 @@ static FNOPEN(fnFileOpen)
 		dwCreationDisposition = OPEN_EXISTING;
 	}
 
-	return (INT_PTR)CreateFileW(UTF8ToUnicode( pszFile),
+	return (INT_PTR)CreateFile(UTF8ToUnicode( pszFile),
 		dwDesiredAccess,
 		FILE_SHARE_READ,
 		NULL,
 		dwCreationDisposition,
-		FILE_ATTRIBUTE_NORMAL,
+		FILE_ATTRIBUTE_NORMAL| FILE_OPTION,
 		NULL);
 }
 
@@ -493,5 +493,5 @@ static HRESULT CabCreateFile(LPCSTR CabFilePath, LPCSTR SourceFile, TCOMP typeCo
 
 static HRESULT CabCreateFile(LPCWSTR CabFilePath, LPCWSTR SourceFile, TCOMP typeCompress = TCOMPfromLZXWindow(21))
 {
-	return CabCreateFile(CabFilePath,SourceFile, typeCompress);
+	return CabCreateFile(CabFilePath,SourceFile, PathFindFileNameW(SourceFile),typeCompress);
 }

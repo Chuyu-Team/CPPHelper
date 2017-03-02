@@ -159,182 +159,261 @@ HRESULT DownloadStream(LPCWSTR Url, IReadWriteStream* pStream, LPCWSTR lpszAgent
 	}
 
 	HRESULT hr = 0;
-	try
-	{
-		WinInetURLHelper Info;
 
-		hr=Info.InternetOpenW();
+	WinInetURLHelper Info;
 		
-		if (hr)
-			return HresultFromBool();
+	int TryCount = 5;
 
-		Info.ParseURLW(Url);
+	Info.ParseURLW(Url);
+
+Start:
+
+
+	hr=Info.InternetOpenW(lpszAgent);
+		
+	if (hr)
+		return HresultFromBool();
+
+	hr=Info.InternetConnectW();
+
+	if (hr)
+		return HresultFromBool();
+
+		
+
+
+	hr=Info.HttpOpenRequestW();
+
+	if (hr)
+		return HresultFromBool();
+
 	
-		hr=Info.InternetConnectW();
+	UINT64 FileSize = 0, UsedSize = 0;
+	//DWORD dwBytesRead = 0;
+	//BYTE TempBuffer[10240];
+	DWORD dwBytesRead;
 
-		if (hr)
-			return HresultFromBool();
+	TCHAR TempBuffer[10240 / sizeof(TCHAR)] = L"Content-Type";
 
-		hr=Info.HttpOpenRequestW();
+	if (pCharSet)
+	{
+		//请求字符集
+		//DWORD WIndex = 0;
+		*pCharSet = CP_ACP;
+		dwBytesRead = sizeof(TempBuffer);
 
-		if (hr)
-			return HresultFromBool();
-
-	
-		UINT64 FileSize = 0, UsedSize = 0;
-		//DWORD dwBytesRead = 0;
-		//BYTE TempBuffer[10240];
-		DWORD dwBytesRead;
-
-		TCHAR TempBuffer[10240 / sizeof(TCHAR)] = L"Content-Type";
-
-		if (pCharSet)
+		if (HttpQueryInfoW(Info.hUrlFile, HTTP_QUERY_CUSTOM, TempBuffer, &dwBytesRead, NULL))
 		{
-			//请求字符集
-			//DWORD WIndex = 0;
-			*pCharSet = CP_ACP;
-			dwBytesRead = sizeof(TempBuffer);
-
-			if (HttpQueryInfoW(Info.hUrlFile, HTTP_QUERY_CUSTOM, TempBuffer, &dwBytesRead, NULL))
+			LPWSTR Str = StrStrI(TempBuffer, L"charset=");
+			if (Str)
 			{
-				LPWSTR Str = StrStrI(TempBuffer, L"charset=");
-				if (Str)
+				Str += 8;
+
+				if (StrCmpI(Str, L"utf-8") == 0)
 				{
-					Str += 8;
-
-					if (StrCmpI(Str, L"utf-8") == 0)
-					{
-						*pCharSet = CP_UTF8;
-					}
-
+					*pCharSet = CP_UTF8;
 				}
+
 			}
+		}
+	}
+
+		
+		
+	UsedSize = dwBytesRead = 0;
+
+	pStream->get_Size(&UsedSize);
+	//pStream->Seek(LARGE_INTEGER{}, FILE_END, (ULARGE_INTEGER*)&UsedSize);
+
+	//if (UsedSize)
+	//{
+		//调整指针
+	{
+		auto Rang = StrFormat(L"Range: bytes=%I64d-\r\n", UsedSize);
+
+		//if (InternetSetFilePointer(hUrlFile, *((DWORD*)&UsedSize), ((PLONG)&UsedSize) + 1, FILE_BEGIN, NULL) == INVALID_SET_FILE_POINTER)
+		//{
+		//	//不支持断点续传，重新开始
+		//	UsedSize = 0;
+		//	pStream->Seek(LARGE_INTEGER{}, FILE_BEGIN, (ULARGE_INTEGER*)&UsedSize);
+		//}
+		hr = Info.HttpSendRequestW(Rang, Rang.GetLength());
+	}
+		if (hr)
+		{
+			return hr;
+		}
+
+		DWORD Status;
+
+		hr=Info.GetStatusCode(Status);
+		if (hr)
+		{
+			return hr;
+		}
+
+		switch (Status)
+		{
+		case HTTP_STATUS_PARTIAL_CONTENT:
+			//支持断点续传
+			break;
+		case HTTP_STATUS_RESET_CONTENT:
+			//不支持断点续传
+			UsedSize = dwBytesRead = 0;
+			pStream->put_Size(0);
+			break;
+		case 0:
+			return E_FAIL;
+		case HTTP_STATUS_NOT_FOUND:
+			if (TryCount--)
+			{
+				//等待 1秒
+				Sleep(1000);
+				goto Start;
+			}
+		default:
+			return Status;
+			break;
+		}
+
+	//}
+			
+		dwBytesRead = sizeof(TempBuffer);
+		if (HttpQueryInfoW(Info.hUrlFile, HTTP_QUERY_CONTENT_LENGTH, TempBuffer, &dwBytesRead, NULL))
+		{
+			//dwBytesRead = UsedSize;
+
+			FileSize = _tcstoui64((wchar_t*)TempBuffer, NULL, 10) + UsedSize;
+			//swscanf((wchar_t*)TempBuffer, L"%I64u", &FileSize);
+		}
+		else
+		{
+			FileSize = -1;
+			callBack = NULL;
 		}
 
 		
+
+
 		
-		UsedSize = dwBytesRead = 0;
 
-		pStream->get_Size(&UsedSize);
-		//pStream->Seek(LARGE_INTEGER{}, FILE_END, (ULARGE_INTEGER*)&UsedSize);
+	//while (true)
+	for (;;)
+	{
+		if (!InternetReadFile(Info.hUrlFile, TempBuffer, sizeof(TempBuffer), &dwBytesRead))
+		{
+		Error:
 
-		//if (UsedSize)
-		//{
-			//调整指针
-			auto Rang = StrFormat(L"Range: bytes=%I64d-\r\n", UsedSize);
-
-			//if (InternetSetFilePointer(hUrlFile, *((DWORD*)&UsedSize), ((PLONG)&UsedSize) + 1, FILE_BEGIN, NULL) == INVALID_SET_FILE_POINTER)
-			//{
-			//	//不支持断点续传，重新开始
-			//	UsedSize = 0;
-			//	pStream->Seek(LARGE_INTEGER{}, FILE_BEGIN, (ULARGE_INTEGER*)&UsedSize);
-			//}
-
-			if (!HttpSendRequestW(Info.hUrlFile, Rang, Rang.GetLength(), NULL, 0))
+			if (--TryCount)
 			{
-				//不支持断点续传，重新开始
-				return HresultFromBool();
-			}
-		//}
-			
-			dwBytesRead = sizeof(TempBuffer);
-			if (HttpQueryInfoW(Info.hUrlFile, HTTP_QUERY_CONTENT_LENGTH, TempBuffer, &dwBytesRead, NULL))
-			{
-				//dwBytesRead = UsedSize;
+			Restart:
 
-				FileSize = _tcstoui64((wchar_t*)TempBuffer, NULL, 10) + UsedSize;
-				//swscanf((wchar_t*)TempBuffer, L"%I64u", &FileSize);
+				hr = Info.InternetOpenW();
+
+				if (hr)
+					return hr;
+
+				hr = Info.InternetConnectW();
+
+				if (hr)
+					return hr;
+
+				hr = Info.HttpOpenRequestW();
+
+				if (hr)
+				{
+					return hr;
+				}
+
+				//重新指定偏移
+
+					
+				auto Rang = StrFormat(L"Range: bytes=%I64d-\r\n", UsedSize);
+
+				hr = Info.HttpSendRequestW(Rang, Rang.GetLength());
+
+				if (hr)
+				{
+					return hr;
+				}
+
+				hr = Info.GetStatusCode(Status);
+				if (hr)
+				{
+					return hr;
+				}
+
+				switch (Status)
+				{
+				case HTTP_STATUS_PARTIAL_CONTENT:
+					//支持断点续传
+					break;
+				case HTTP_STATUS_RESET_CONTENT:
+					//不支持断点续传
+					UsedSize = dwBytesRead = 0;
+					pStream->put_Size(0);
+					break;
+				case 0:
+					return E_FAIL;
+				case HTTP_STATUS_NOT_FOUND:
+					if (TryCount--)
+					{
+						Sleep(1000);
+						goto Restart;
+					}
+				default:
+					return Status;
+					break;
+				}
 			}
 			else
 			{
-				FileSize = -1;
-				callBack = NULL;
+				return HresultFromBool();
 			}
-
-		
-
-
-		int TryCount = 5;
-
-		while (true)
-		{
-			if (!InternetReadFile(Info.hUrlFile, TempBuffer, sizeof(TempBuffer), &dwBytesRead))
-			{
-			Error:
-
-				if (--TryCount)
-				{
-					hr = Info.InternetOpenW();
-
-					if (hr)
-						return HresultFromBool();
-
-					hr = Info.InternetConnectW();
-
-					if (hr)
-						return HresultFromBool();
-
-					hr = Info.HttpOpenRequestW();
-
-					if (hr)
-						return HresultFromBool();
-
-
-					//重新指定偏移
-
-					
-					auto Rang = StrFormat(L"Range: bytes=%I64d-\r\n", UsedSize);
-
-					if (!HttpSendRequestW(Info.hUrlFile, Rang, Rang.GetLength(), NULL, 0))
-					{
-						return HresultFromBool();
-					}
-				}
-				else
-				{
-					return HresultFromBool();
-				}
-				break;
-			}
-
-
-			if (dwBytesRead == 0)
-			{
-				if(FileSize==-1|| FileSize== UsedSize)
-					break;
-
-				goto Error;
-			}
-
-			TryCount = 5;
-
-			if (hr = pStream->Write(TempBuffer, dwBytesRead, &dwBytesRead, &UsedSize))
-			{
-				return GetLastError();
-				break;
-			}
-
-			UsedSize += dwBytesRead;
-
-			if (callBack)
-			{
-				callBack(/*DISM_MSG_PROGRESS*/38008, UsedSize * 100 / FileSize, 0, pUserData);
-
-				if (callBack(/*Dism_MSG_QUERY_ABORT*/38030, 0, 0, pUserData))
-				{
-					return ERROR_CANCELLED;
-				}
-			}
-
-			
+			break;
 		}
 
-		return S_OK;
+
+		if (dwBytesRead == 0)
+		{
+			if(FileSize==-1|| FileSize== UsedSize)
+				break;
+
+			if (FileSize < UsedSize)
+			{
+				//pStream->put_Size(0);
+
+				//意外的网络错误
+				return 59;
+			}
+
+			goto Error;
+		}
+
+		TryCount = 5;
+
+		if (hr = pStream->Write(TempBuffer, dwBytesRead, &dwBytesRead, &UsedSize))
+		{
+			return hr;
+			break;
+		}
+
+		UsedSize += dwBytesRead;
+
+		if (callBack)
+		{
+			callBack(/*DISM_MSG_PROGRESS*/38008, UsedSize * 100 / FileSize, 0, pUserData);
+
+			if (callBack(/*Dism_MSG_QUERY_ABORT*/38030, 0, 0, pUserData))
+			{
+				return ERROR_CANCELLED;
+			}
+		}
+
+			
 	}
-	catch (...)
-	{
-		return 5;
-	}
+
+	return S_OK;
 }
 
 HRESULT DownloadFile(LPCWSTR Url, LPCWSTR FilePath, BaseCallBack callBack, LPVOID pUserData)

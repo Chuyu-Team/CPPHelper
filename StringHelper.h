@@ -52,6 +52,8 @@ CString StrFormatByte(UINT64 ByteSize);
 
 CStringA Unicode2UTF8(LPCWSTR Str);
 
+CStringA Unicode2UTF8(LPCWSTR Str, DWORD cStr);
+
 void UTF8ToUnicode(const char* Src, DWORD cchSrc, CString& Dest);
 
 CString UTF8ToUnicode(const char* Src, DWORD cchSrc);

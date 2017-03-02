@@ -1,7 +1,8 @@
 #pragma once
 #include <Windows.h>
 #include <xutility>
-
+#include "CriticalSectionHelper.h"
+#include <atlutil.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -18,7 +19,7 @@ public:
 
 	template<class _Ptr>
 	//dwCreationFlags请参考CreateThread
-	Thread(_Ptr&& _ptr, DWORD dwCreationFlags = 0)
+	Thread(_Ptr& _ptr, DWORD dwCreationFlags = 0)
 	{
 		hThread = (HANDLE)_beginthreadex(NULL, 0, [](void * UserData) ->unsigned
 		{
@@ -84,174 +85,106 @@ public:
 	}
 };
 
-class ThreadPoolWork
+
+#define Task Thread
+
+class CATLThreadPoolWorker
 {
 public:
-	PTP_WORK m_Work;
-	ThreadPoolWork(PTP_WORK pWork)
-		:m_Work(pWork)
+	_beginthreadex_proc_type Call;
+	void* UserData;
+
+	//HANDLE hWorkEvent;
+
+	volatile LONG Count;
+	BOOL bCancelled;
+	CATLThreadPoolWorker(_beginthreadex_proc_type _Call, void* _UserData)
+		: Call(_Call)
+		, UserData(_UserData)
+		, Count(0)
+		, bCancelled(FALSE)
+		//, hWorkEvent(CreateEvent(NULL,TRUE,TRUE,NULL))
 	{
-	}
-
-
-	ThreadPoolWork(ThreadPoolWork const&) = delete;
-	ThreadPoolWork(ThreadPoolWork&& tmp)
-	{
-		m_Work = tmp.m_Work;
-		tmp.m_Work = NULL;
-	}
-
-	ThreadPoolWork& operator=(ThreadPoolWork const&) = delete;
-
-	~ThreadPoolWork()
-	{
-		CloseThreadpoolWork(m_Work);
-	}
-
-	void Wait()
-	{
-		Wait(FALSE);
-	}
-
-	void Wait(_In_ BOOL fCancelPendingCallbacks)
-	{
-		WaitForThreadpoolWorkCallbacks(m_Work, fCancelPendingCallbacks);
-	}
-
-	//加入工作队列
-	void Submit()
-	{
-		SubmitThreadpoolWork(m_Work);
-	}
-};
-
-class ThreadPool
-{
-public:
-	PTP_POOL pPool;
-	TP_CALLBACK_ENVIRON pcbe;
-
-
-	ThreadPool(PTP_POOL _pPool = CreateThreadpool(NULL))
-		:pPool(_pPool)
-	{
-		InitializeThreadpoolEnvironment(&pcbe);
-
-		SetThreadpoolCallbackPool(&pcbe, pPool);
-	}
-
-	~ThreadPool()
-	{
-		DestroyThreadpoolEnvironment(&pcbe);
-		//关闭线程池
-		CloseThreadpool(pPool);
-	}
-
-	ThreadPool(ThreadPool const&) = delete;
-	ThreadPool& operator=(ThreadPool const&) = delete;
-
-	BOOL SetThreadMinimum(DWORD cthrdMic)
-	{
-		return SetThreadpoolThreadMinimum(pPool, cthrdMic);
-	}
-
-	void SetThreadMaximum(DWORD cthrdMost)
-	{
-		SetThreadpoolThreadMaximum(pPool, cthrdMost);
-	}
-
-
-	//提交任务
-	template<class _Ptr>
-	BOOL TrySubmit(_Ptr&& _ptr)
-	{
-		return TrySubmitThreadpoolCallback([](PTP_CALLBACK_INSTANCE Instance, PVOID Context) ->void
-		{
-			auto Ptr = (_Ptr*)Context;
-
-			(*Ptr)();
-
-			delete Ptr;
-
-		}, (void*)new _Ptr(std::move(_ptr)), &pcbe);
 	}
 
 	template<class _Ptr>
-	ThreadPoolWork CreateWork(_Ptr&& _ptr)
+	//dwCreationFlags请参考CreateThread
+	CATLThreadPoolWorker(_Ptr&& _ptr)
+		: UserData(&_ptr)
+		, Count(0)
+		, bCancelled(FALSE)
 	{
-		return ThreadPoolWork(CreateThreadpoolWork([](PTP_CALLBACK_INSTANCE Instance, PVOID Context, PTP_WORK Work)->void
+		Call=[](void * UserData) ->unsigned
 		{
+			auto Ptr = (_Ptr*)UserData;
 
-			auto Ptr = (_Ptr*)Context;
 
 			(*Ptr)();
-			//auto Ptr = (_Ptr*)Context;
 
-			//(*Ptr)();
+			return 0;
 
-			//delete Ptr;
-
-		}, (void*)&_ptr, &pcbe));
+		};
 	}
 
-	//并行for
-	template<class Items, class _Ptr>
-	void For(Items& m_Items, _Ptr&& _ptr)
+	//开始执行任务
+	void John()
 	{
-		volatile auto b = m_Items.begin();
-		CComAutoCriticalSection Section;
+		if(!bCancelled)
+			Call(UserData);
 
-		auto&& Work = CreateWork([&b, &Section, &_ptr]()
-		{
-			Section.Lock();
-
-			auto& Item = *(b++);
-
-			Section.Unlock();
-
-			_ptr(Item);
-		});
-
-		for (auto& Item : m_Items)
-		{
-			Work.Submit();
-		}
-
-		Work.Wait();
-
-	}
-
-	//并行for
-	template<class Item, class _Ptr>
-	void For(Item* pItems, LONG Count, _Ptr&& _ptr)
-	{
-		volatile LONG Index = -1;
-
-		auto&& Work = CreateWork([&Index, &_ptr, pItems]()
-		{
-			_ptr(pItems[InterlockedIncrement(&Index)]);
-		});
-
-		for (long i = 0;i != Count;++i)
-		{
-			Work.Submit();
-		}
-
-		Work.Wait();
+		InterlockedDecrement(&Count);
 	}
 };
 
-//通过系统内置线程池创建异步任务
-template<class _Ptr>
-static BOOL __fastcall Task(_Ptr&& _ptr)
+class CATLThreadPoolWorkerInternal
 {
-	return TrySubmitThreadpoolCallback([](PTP_CALLBACK_INSTANCE Instance, PVOID Context) ->void
+public:
+	typedef CATLThreadPoolWorker* RequestType;
+
+	static BOOL Initialize(void *pvParam)
 	{
-		auto Ptr = (_Ptr*)Context;
+		return TRUE;
+	}
 
-		(*Ptr)();
+	static void Terminate(void* pvParam)
+	{
+	}
 
-		delete Ptr;
+	static void Execute(
+		_In_ typename RequestType request,
+		_In_ void *pvWorkerParam,
+		_In_ OVERLAPPED *pOverlapped)
+	{
+		ATLASSERT(request != NULL);
 
-	}, (void*)new _Ptr(std::move(_ptr)), NULL);
-}
+		request->John();
+	}
+
+	static BOOL GetWorkerData(DWORD /*dwParam*/, void ** /*ppvData*/)
+	{
+		return FALSE;
+	}
+};
+
+
+class CThreadPool2: public CThreadPool<CATLThreadPoolWorkerInternal>
+{
+public:
+
+	BOOL QueueRequest(_In_ typename CATLThreadPoolWorkerInternal::RequestType request)
+	{
+		InterlockedIncrement(&request->Count);
+		
+		if (CThreadPool<CATLThreadPoolWorkerInternal>::QueueRequest(request))
+		{
+			return TRUE;
+		}
+		else
+		{
+			//提交任务失败
+
+			InterlockedDecrement(&request->Count);
+			return FALSE;
+		}
+	}
+};

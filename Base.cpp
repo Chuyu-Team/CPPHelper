@@ -1,6 +1,8 @@
 #pragma once
 #include "Base.h"
 #include "ComHelper.h"
+#include <setupapi.h>
+#pragma comment(lib,"setupapi.lib")
 
 
 //过滤指定字符
@@ -178,16 +180,20 @@ CString StrFormatByte(UINT64 ByteSize)
 
 CStringA Unicode2UTF8(LPCWSTR Str)
 {
-	auto chStr = StrLen(Str);
+	return Unicode2UTF8(Str, StrLenW(Str));
+}
 
-	auto chUtf8Str = WideCharToMultiByte(CP_UTF8, 0, Str, chStr, NULL, 0, NULL, NULL);
+CStringA Unicode2UTF8(LPCWSTR Str,DWORD cStr)
+{
+	auto chUtf8Str = WideCharToMultiByte(CP_UTF8, 0, Str, cStr, NULL, 0, NULL, NULL);
 
 	CStringA Utf8Str;
 
-	Utf8Str.ReleaseBufferSetLength(WideCharToMultiByte(CP_UTF8, 0, Str, chStr, Utf8Str.GetBuffer(chUtf8Str), chUtf8Str, NULL, NULL));
+	Utf8Str.ReleaseBufferSetLength(WideCharToMultiByte(CP_UTF8, 0, Str, cStr, Utf8Str.GetBuffer(chUtf8Str), chUtf8Str, NULL, NULL));
 
 	return Utf8Str;
 }
+
 
 BOOL StrRegexMatch(LPCWSTR Str, LPCWSTR MatchStr)
 {
@@ -825,7 +831,7 @@ const BYTE FAT_PBR[] =
 
 HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 {
-	CHFile hRootPath = CreateFile(BootPartition, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+	CHFile hRootPath = CreateFile(BootPartition, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError();
@@ -934,7 +940,7 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 		return E_NOINTERFACE;
 	}
 
-	hRootPath = CreateFile(StrFormat(L"\\\\.\\PhysicalDrive%u", PhysicalOffsets.PhysicalOffset->DiskNumber), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+	hRootPath = CreateFile(StrFormat(L"\\\\.\\PhysicalDrive%u", PhysicalOffsets.PhysicalOffset->DiskNumber), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError();
@@ -1001,7 +1007,7 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 
 HRESULT DiskGetPartitionStyle(LPCWSTR Partition, PARTITION_STYLE* pPartitionStyle)
 {
-	CHFile hRootPath = CreateFile(Partition, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+	CHFile hRootPath = CreateFile(Partition, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError();
@@ -1044,7 +1050,7 @@ GUID Str2Guid(LPCWSTR String)
 
 	auto hr=CLSIDFromString((LPOLESTR)String, &Temp);
 
-	assert(hr!=S_OK);
+	assert(hr==S_OK);
 	/*swscanf(String, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
 	&Temp.Data1, &Temp.Data2, &Temp.Data3, Temp.Data4,Temp.Data4 + 1,
 	Temp.Data4 + 2, Temp.Data4 + 3, Temp.Data4 + 4, Temp.Data4 + 5, Temp.Data4 + 6, Temp.Data4 + 7);*/
@@ -1491,11 +1497,6 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 
 
 	CComPtr<IFileSystemImage2> pSystemImage;
-	CComPtr<IFsiDirectoryItem> pRootDirItem;
-	CComPtr<IFileSystemImageResult> pSystemImageResult;
-	IStream					*pImageStream;
-	IStream					*pFileStream;
-
 
 	auto hr = CoCreateInstance(__uuidof(MsftFileSystemImage),
 		NULL,
@@ -1515,90 +1516,144 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 		return hr;
 	}
 	
+	const IMAPI_MEDIA_PHYSICAL_TYPE MediaTypes[] = { IMAPI_MEDIA_TYPE_DVDPLUSR ,IMAPI_MEDIA_TYPE_DVDDASHR, IMAPI_MEDIA_TYPE_DVDPLUSR_DUALLAYER ,IMAPI_MEDIA_TYPE_DVDDASHR_DUALLAYER,IMAPI_MEDIA_TYPE_HDDVDROM };
+
+	std::vector<IBootOptions*> BootOptions;
+
 	{
-		pSystemImage->ChooseImageDefaultsForMediaType(IMAPI_MEDIA_TYPE_DVDPLUSR);
+		CComPtr<IStream> pBootStream;
+		SHCreateStreamOnFileW(pSrcDir + BOOT_FILE_NAME_LEGACY, STGM_READ | STGM_SHARE_DENY_WRITE, &pBootStream);
+		if (pBootStream)
+		{
+			CComPtr<IBootOptions> BootOption;
 
+			hr = CoCreateInstance(__uuidof(BootOptions), NULL, CLSCTX_INPROC_SERVER, __uuidof(IBootOptions), (void**)&BootOption);
+			if (SUCCEEDED(hr))
+			{
+				BootOption->put_Manufacturer(CComBSTR(L"MBR"));
+				BootOption->put_PlatformId(PlatformX86);
+				BootOption->put_Emulation(EmulationNone);
 
-		auto psa = SafeArrayCreateVector(VT_VARIANT, 0, 2);
+				BootOption->AssignBootImage(pBootStream);
+
+				BootOptions.push_back(BootOption.Detach());
+			}
+		}
+	}
+
+	{
+		CComPtr<IStream> pBootStream;
+		SHCreateStreamOnFileW(pSrcDir + BOOT_FILE_NAME_UEFI, STGM_READ | STGM_SHARE_DENY_WRITE, &pBootStream);
+		if (pBootStream)
+		{
+			CComPtr<IBootOptions> BootOption;
+
+			hr = CoCreateInstance(__uuidof(BootOptions), NULL, CLSCTX_INPROC_SERVER, __uuidof(IBootOptions), (void**)&BootOption);
+			if (SUCCEEDED(hr))
+			{
+				BootOption->put_Manufacturer(CComBSTR(L"UEFI"));
+				BootOption->put_PlatformId(PlatformEFI);
+				BootOption->put_Emulation(EmulationNone);
+
+				BootOption->AssignBootImage(pBootStream);
+
+				BootOptions.push_back(BootOption.Detach());
+			}
+		}
+	}
+	SAFEARRAY * psa = NULL;
+
+	if (auto Size = BootOptions.size())
+	{
+		psa = SafeArrayCreateVector(VT_VARIANT, 0, Size);
 
 		VARIANT* pData;
 
 		SafeArrayAccessData(psa, (void**)&pData);
-		CComPtr<IBootOptions> BootOption1;
-		CComPtr<IBootOptions> BootOption2;
-		IStream *pBootStream = NULL;
 
-		hr = CoCreateInstance(__uuidof(BootOptions), NULL, CLSCTX_INPROC_SERVER, __uuidof(IBootOptions), (void**)&BootOption1);
-		BootOption1->put_Manufacturer(CComBSTR(L"MBR"));
-		BootOption1->put_PlatformId(PlatformX86);
-		BootOption1->put_Emulation(EmulationNone);
-
-
-		SHCreateStreamOnFileW(pSrcDir + BOOT_FILE_NAME_LEGACY, STGM_READ | STGM_SHARE_DENY_WRITE, &pBootStream);
-		if (pBootStream)
+		for (int i = 0;i != Size;++i)
 		{
-			BootOption1->AssignBootImage(pBootStream);
-			pBootStream->Release();
-			pBootStream = NULL;
+			pData[i].vt = VT_DISPATCH;
 
-			pData[0].vt = VT_DISPATCH;
-
-			pData[0].pdispVal = BootOption1;
-			//hr = BootOption1->QueryInterface(&);
+			pData[i].pdispVal = BootOptions[i];
 		}
+	}
 
-		hr = CoCreateInstance(__uuidof(BootOptions), NULL, CLSCTX_INPROC_SERVER, __uuidof(IBootOptions), (void**)&BootOption2);
-		BootOption2->put_Manufacturer(CComBSTR(L"UEFI"));
-		BootOption2->put_PlatformId(PlatformEFI);
-		BootOption2->put_Emulation(EmulationNone);
+	RunOnExit([&]()
+	{
+		if(psa)
+			SafeArrayDestroy(psa);
 
+		for (auto pItem : BootOptions)
+			pItem->Release();
+	});
 
-		SHCreateStreamOnFileW(pSrcDir + BOOT_FILE_NAME_UEFI, STGM_READ | STGM_SHARE_DENY_WRITE, &pBootStream);
-		if (pBootStream)
-		{
-			BootOption2->AssignBootImage(pBootStream);
-			pBootStream->Release();
-			pBootStream = NULL;
-
-			pData[1].vt = VT_DISPATCH;
-
-			pData[1].pdispVal = BootOption2;
-			//hr = BootOption2->QueryInterface(&pData[1].pdispVal);
-		}
-
+	if (psa)
+	{
 		SafeArrayUnaccessData(psa);
 
-		hr = pSystemImage->put_BootImageOptionsArray(psa);
+		pSystemImage->put_BootImageOptionsArray(psa);
+	}
 
-		//获取根条目
-		hr = pSystemImage->get_Root(&pRootDirItem);
+	CComPtr<IFsiDirectoryItem> pRootDirItem;
 
-		//添加一个目录树到镜像
+	//获取根条目
+	hr = pSystemImage->get_Root(&pRootDirItem);
 
-		hr = pRootDirItem->AddTree(CComBSTR(pSrcDir), FALSE);
+	if (FAILED(hr))
+		return hr;
+
+	//添加一个目录树到镜像
+	CComBSTR TreeRoot(pSrcDir);
+
+	for (int i = 0;i != ArraySize(MediaTypes);++i)
+	{
+		pSystemImage->ChooseImageDefaultsForMediaType(MediaTypes[i]);
+
+		hr = pRootDirItem->AddTree(TreeRoot, FALSE);
 
 		if (FAILED(hr))
 		{
-			SafeArrayDestroy(psa);
-			return hr;
+			if (hr == /*IMAPI_E_IMAGE_SIZE_LIMIT*/0xC0AAB120L)
+			{
+				//超过极限呀小，继续调整映像类型
+				continue;
+			}
+			else
+			{
+				//中断程序已经错误
+				return hr;
+			}
 		}
 
+			
+		CComPtr<IFileSystemImageResult> pSystemImageResult;
 
 		//创建一个包含文件系统和文件数据的结果对象
 		hr = pSystemImage->CreateResultImage(&pSystemImageResult);
 
+		//无法创建结果集
 		if (FAILED(hr))
 		{
-			SafeArrayDestroy(psa);
 			return hr;
 		}
+
+		CComPtr<IStream> pImageStream;
+
 		//获取镜像流
-		pSystemImageResult->get_ImageStream(&pImageStream);
-		if (SUCCEEDED(hr))
+		hr = pSystemImageResult->get_ImageStream(&pImageStream);
+		//无法获取镜像流
+		if (FAILED(hr))
+		{
+			return hr;
+		}
+		else
 		{
 			STATSTG			statstg;
 			//ULARGE_INTEGER	ullRead;
 			//ULARGE_INTEGER	ullWritten;
+
+			CComPtr<IStream> pFileStream;
 
 			//创建iso文件
 			hr = SHCreateStreamOnFileEx(pIsoPath,
@@ -1608,44 +1663,72 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 				NULL,
 				&pFileStream);
 
-			if (SUCCEEDED(hr))
+			if (FAILED(hr))
 			{
-				pImageStream->Stat(&statstg, STATFLAG_DEFAULT);
-
-				CStringA BufferISO;
-				auto pBuffer = BufferISO.GetBuffer(1024 * 1024);
-
-				ULONG cbRead = 0;
-
-				UINT64 cbReadAll = 0;
+				return hr;
+			}
 
 
-				while (pImageStream->Read(pBuffer, 1024 * 1024, &cbRead) == S_OK&&cbRead)
+			pImageStream->Stat(&statstg, STATFLAG_DEFAULT);
+
+			CStringA BufferISO;
+			auto pBuffer = BufferISO.GetBuffer(1024 * 1024);
+
+			ULONG cbRead = 0;
+
+			UINT64 cbReadAll = 0;
+
+
+			//while ( == S_OK&&cbRead)
+			for (;;)
+			{
+				cbRead = 0;
+				auto thr = pImageStream->Read(pBuffer, 1024 * 1024, &cbRead);
+
+				if (FAILED(thr))
 				{
-					cbReadAll += cbRead;
-
-					pFileStream->Write(pBuffer, cbRead, &cbRead);
-
-					if (callBack)
-					{
-						callBack(DISM_MSG_PROGRESS, cbReadAll * 100 / statstg.cbSize.QuadPart, 0, pUserData);
-					}
-
+					hr = thr;
+					break;
 				}
 
+				if (cbRead == 0)
+					break;
 
+				cbReadAll += cbRead;
 
-				//hr = pImageStream->CopyTo(pFileStream, statstg.cbSize, &ullRead, &ullWritten);
+				thr = pFileStream->Write(pBuffer, cbRead, &cbRead);
 
-				pFileStream->Release();
+				if (FAILED(thr))
+				{
+					hr = thr;
+					break;
+				}
+
+				if (callBack)
+				{
+					callBack(DISM_MSG_PROGRESS, cbReadAll * 100 / statstg.cbSize.QuadPart, 0, pUserData);
+
+					if (callBack(38030, 0, 0, pUserData))
+					{
+						hr = __HRESULT_FROM_WIN32(ERROR_CANCELLED);
+						break;
+					}
+				}
 			}
-			pImageStream->Release();
 		}
 
-		SafeArrayDestroy(psa);
+		if (FAILED( hr))
+		{
+			DeleteFile(pIsoPath);
+			return hr;
+		}
+		else
+		{
+			return S_OK;
+		}
 	}
 
-	return hr;
+	return E_NOTIMPL;
 }
 
 #endif
@@ -1748,21 +1831,13 @@ BOOL PathIsSameVolume(LPCWSTR Path1, LPCWSTR Path2)
 }
 
 
-void UTF8ToUnicode(const char* Src, DWORD cchSrc, CString& Dest)
+void UTF8ToUnicode(const char* Src, DWORD chSrc, CString& Dest)
 {
-	if (cchSrc == -1)
-	{
-		cchSrc = strlen(Src);
-	}
-	Dest.Empty();
+	assert(chSrc != -1);
 
+	chSrc=MultiByteToWideChar(CP_UTF8, 0, Src, chSrc, Dest.GetBuffer(chSrc), chSrc + 1);
 
-
-	int cchDest = MultiByteToWideChar(CP_UTF8, 0, Src, cchSrc, NULL, 0);
-
-	MultiByteToWideChar(CP_UTF8, 0, Src, cchSrc, Dest.GetBuffer(cchDest), cchDest + 1);
-
-	Dest.ReleaseBufferSetLength(cchDest);
+	Dest.ReleaseBufferSetLength(chSrc);
 }
 
 CString UTF8ToUnicode(const char* Src, DWORD cchSrc)
@@ -1814,7 +1889,7 @@ HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD
 			FILE_SHARE_READ,
 			NULL,
 			OPEN_EXISTING,
-			0,
+			FILE_OPTION,
 			NULL);
 
 		if (hFile.IsInvalid())
@@ -2039,7 +2114,7 @@ HRESULT CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 
 	HRESULT hr = S_OK;
 
-	auto thFile = CreateFile(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	auto thFile = CreateFile(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL| FILE_OPTION, 0);
 
 	if (thFile != INVALID_HANDLE_VALUE)
 	{
@@ -2115,19 +2190,15 @@ HRESULT CreateRoot(LPCWSTR FilePath)
 	{
 		*Path = NULL;
 
-		switch (GetFileType(Buffer))
+		if (!CreateDirectory(Buffer, NULL))
 		{
-		case PathNotExist:
-			if (!CreateDirectory(Buffer, NULL))
+			auto hr = GetLastError();
+
+			if (hr)
 			{
-				return GetLastError();
+				if(hr!= ERROR_ALREADY_EXISTS)
+					return hr;
 			}
-			break;
-		case PathIsFile:
-			return ERROR_FILE_EXISTS;
-			break;
-		default:
-			break;
 		}
 
 		*Path = L'\\';
@@ -2148,7 +2219,7 @@ HANDLE OpenDriver(LPCWSTR DriverPath, DWORD dwDesiredAccess)
 	if (_RootPath[_RootPath.GetLength() - 1] == L'\\')
 		_RootPath.ReleaseBufferSetLength(_RootPath.GetLength() - 1);
 
-	return CreateFileW(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, 0);
+	return CreateFile(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 }
 
 HRESULT GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
@@ -2167,13 +2238,23 @@ HRESULT GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
 		}
 		else
 		{
-			return GetLastError();
+			return HresultFromBool();
 		}
 	}
 
 	Buffer.ReleaseBufferSetLength(ccbLauout);
 
 	return S_OK;
+}
+
+HRESULT GetDriverLayout(LPCWSTR DriverPath, CStringA& Buffer)
+{
+	CHFile hDevice = OpenDriver(DriverPath);
+
+	if (hDevice.IsInvalid())
+		return HresultFromBool();
+
+	return ::GetDriverLayout(hDevice, Buffer);
 }
 
 int GetPartitionDisk(HANDLE hDevice)
@@ -2242,13 +2323,71 @@ HRESULT GetVhdVolumeFilePath(LPCWSTR hDevicePath, CString& VHDFilePath)
 	return GetVhdVolumeFilePath(CHFile(OpenDriver(hDevicePath)), VHDFilePath);
 }
 
-DWORD GetDiskCount()
+HRESULT __fastcall GetDevicePath(const GUID& Guid, std::vector<CString>& pszDevicePath)
 {
-	DWORD DiskCount = 0;
+	pszDevicePath.clear();
 
-	RegGetData(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Disk\\Enum", L"Count", &DiskCount);
+	auto hDevInfoSet = SetupDiGetClassDevs(
 
-	return DiskCount;
+		&Guid,      // class GUID 
+
+		NULL,        // Enumerator
+
+		NULL,        // hwndParent
+
+		DIGCF_PRESENT | DIGCF_DEVICEINTERFACE    // present devices
+
+		);
+
+	if (hDevInfoSet == INVALID_HANDLE_VALUE)
+	{
+
+		return HresultFromBool();
+	}
+
+
+	byte DETAIL_DATA_Buffer[1024];
+
+	auto& Detail = *(SP_DEVICE_INTERFACE_DETAIL_DATA*)DETAIL_DATA_Buffer;
+
+	Detail.cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+
+	SP_DEVICE_INTERFACE_DATA ifdata;
+	ifdata.cbSize = sizeof(ifdata);
+
+	for (DWORD i=0;SetupDiEnumDeviceInterfaces(hDevInfoSet,NULL,&Guid,i,&ifdata );++i)
+	{
+		if(SetupDiGetDeviceInterfaceDetail(
+
+			hDevInfoSet,    // DeviceInfoSet
+
+			&ifdata,        // DeviceInterfaceData
+
+			&Detail,        // DeviceInterfaceDetailData
+
+			sizeof(DETAIL_DATA_Buffer),    // DeviceInterfaceDetailDataSize
+
+			NULL,           // RequiredSize
+
+			NULL          // DeviceInfoData
+
+			))
+		{
+			pszDevicePath.push_back(Detail.DevicePath);
+		}
+	}
+
+	SetupDiDestroyDeviceInfoList(hDevInfoSet);
+
+	return S_OK;
+}
+
+HRESULT GetDiskCount(std::vector<CString>& pszDevicePath)
+{
+	//vector<CString> pszDevicePath;
+
+	return GetDevicePath(GUID_DEVINTERFACE_DISK, pszDevicePath);
 }
 
 
@@ -2256,7 +2395,7 @@ DWORD GetDiskCount()
 //#pragma comment(lib,"Dbghelp.lib")
 //#pragma comment(lib,"IMAGEHLP.lib")
 
-byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD VirtualAddress, LPCSTR ProcName)
+byte* IsProcExistsInternal(byte* pBase,byte* pEnd, PIMAGE_NT_HEADERS pNtHeaders, DWORD VirtualAddress, LPCSTR ProcName)
 {
 	auto pExportTable = (PIMAGE_EXPORT_DIRECTORY)RtlImageRvaToVa((PIMAGE_NT_HEADERS)pNtHeaders, pBase, VirtualAddress, NULL);
 
@@ -2264,8 +2403,14 @@ byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD Virt
 	//auto pExportTable = (PIMAGE_EXPORT_DIRECTORY)((BYTE*)pBase +VirtualAddress);
 	//IMAGE_OPTIONAL_HEADER * Opthdr = (PIMAGE_OPTIONAL_HEADER)((byte*)pBase + DosHeader->e_lfanew + 24);
 
-	if (pExportTable == NULL || IsBadReadPtr(pExportTable, sizeof(*pExportTable)))
+	if (pExportTable == NULL)
 		return NULL;
+
+	if ((byte*)pExportTable+sizeof(IMAGE_EXPORT_DIRECTORY) >= pEnd)
+	{
+		return NULL;
+	}
+
 
 	auto pNames = (PDWORD)RtlImageRvaToVa(
 		(PIMAGE_NT_HEADERS)pNtHeaders, pBase,
@@ -2276,7 +2421,11 @@ byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD Virt
 	if (pNames == NULL)
 		return NULL;
 
-
+	//检查长度
+	if ((byte*)pNames + pExportTable->NumberOfNames *sizeof(*pNames) >= pEnd)
+	{
+		return NULL;
+	}
 
 	//IMAGE_DOS_HEADER * DosHeader = (PIMAGE_DOS_HEADER)GetModuleHandle(L"ntdll.dll");
 	//IMAGE_OPTIONAL_HEADER * Opthdr = (PIMAGE_OPTIONAL_HEADER)((byte*)DosHeader + DosHeader->e_lfanew + 24);
@@ -2300,15 +2449,27 @@ byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD Virt
 	//	}
 	//}
 
+	auto cbProcName = strlen(ProcName)+1;
+
 	for (int i = 0; i != pExportTable->NumberOfNames; i++)
 	{
 		LPCSTR szFuncName = (LPCSTR)RtlImageRvaToVa(
 			(PIMAGE_NT_HEADERS)pNtHeaders, pBase,
 			pNames[i],
 			NULL);
+
+		if (szFuncName == NULL)
+			continue;
+
+		//检查字符串长度
+		if ((byte*)szFuncName + cbProcName >= pEnd)
+		{
+			return NULL;
+		}
+
 		//auto szFuncName = (LPCSTR)((BYTE*)pBase + pNames[i]);
 
-		if (StrCmpA(ProcName, szFuncName) == 0)
+		if (memcmp(ProcName, szFuncName, cbProcName) == 0)
 		{
 			//已经匹配。开始搜索下标
 
@@ -2320,11 +2481,23 @@ byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD Virt
 			if (!pNameOrdinals)
 				return NULL;
 
+			if ((byte*)pNameOrdinals + sizeof(*pNameOrdinals)*pExportTable->NumberOfNames >= pEnd)
+			{
+				return NULL;
+			}
+
 			//
 			auto pFunctions = (PDWORD)RtlImageRvaToVa(
 				(PIMAGE_NT_HEADERS)pNtHeaders, pBase,
 				pExportTable->AddressOfFunctions,
 				NULL);
+
+			pFunctions += pNameOrdinals[i];
+
+			if ((byte*)pFunctions + sizeof(*pFunctions) >= pEnd)
+			{
+				return NULL;
+			}
 
 			return (byte*)RtlImageRvaToVa(pNtHeaders, pBase, pFunctions[pNameOrdinals[i]], NULL);
 		}
@@ -2333,27 +2506,33 @@ byte* IsProcExistsInternal(byte* pBase, PIMAGE_NT_HEADERS pNtHeaders, DWORD Virt
 	return NULL;
 }
 
-byte* IsProcExists(byte* pBase, LPCSTR ProcName)
+byte* IsProcExists(byte* pBase,byte* pEnd, LPCSTR ProcName)
 {
 	if (pBase == NULL)
-		return false;
+		return NULL;
 
 	auto pNtHeader = RtlImageNtHeader(pBase);
 
 	if (pNtHeader == NULL)
-		return false;
+		return NULL;
+
+	if ((byte*)pNtHeader + sizeof(DWORD) + sizeof(IMAGE_FILE_HEADER) >= pEnd )
+	{
+		//NtHeader越界！
+		return NULL;
+	}
 
 	switch (pNtHeader->FileHeader.Machine)
 	{
 	case IMAGE_FILE_MACHINE_I386:
-		return IsProcExistsInternal(pBase, pNtHeader, ((PIMAGE_NT_HEADERS32)pNtHeader)->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress, ProcName);
+		return IsProcExistsInternal(pBase, pEnd, pNtHeader, ((PIMAGE_NT_HEADERS32)pNtHeader)->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress, ProcName);
 		break;
 	case IMAGE_FILE_MACHINE_AMD64:
 	case IMAGE_FILE_MACHINE_IA64:
-		return IsProcExistsInternal(pBase, pNtHeader, ((PIMAGE_NT_HEADERS64)pNtHeader)->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress, ProcName);
+		return IsProcExistsInternal(pBase, pEnd, pNtHeader, ((PIMAGE_NT_HEADERS64)pNtHeader)->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress, ProcName);
 		break;
 	default:
-		return false;
+		return NULL;
 		break;
 	}
 }
@@ -2372,7 +2551,7 @@ bool IsProcExists(HANDLE hFile, LPCSTR ProcName)
 	if (!pBase)
 		return false;
 
-	auto ret = IsProcExists(pBase, "DllGetClassObject");
+	auto ret = IsProcExists(pBase, pBase+GetFileSize(hFile,NULL), "DllGetClassObject");
 
 	UnmapViewOfFile(pBase);
 
@@ -2381,7 +2560,7 @@ bool IsProcExists(HANDLE hFile, LPCSTR ProcName)
 
 DWORD GetFileArchitecture(LPCWSTR FilePath)
 {
-	CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPEN_FOR_BACKUP_INTENT, NULL);
+	CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPTION, NULL);
 
 	if (hFile.IsInvalid())
 		return PROCESSOR_ARCHITECTURE_UNKNOWN;

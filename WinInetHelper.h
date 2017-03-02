@@ -1,5 +1,6 @@
 #pragma once
 #include <Windows.h>
+#include <WinInet.h>
 
 HRESULT DownloadFile(LPCWSTR Url, CStringA& Buffer, DWORD* pCharSet , BaseCallBack callBack, LPVOID pUserData );
 
@@ -70,8 +71,22 @@ public:
 	{
 		Close();
 
-		m_hSession = ::InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, dwFlags);
-		return m_hSession ? S_OK : GetLastError();
+		if (m_hSession = ::InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, dwFlags))
+		{
+			DWORD TimeOut = 30 * 1000;
+
+			::InternetSetOption(m_hSession, INTERNET_OPTION_CONNECT_TIMEOUT,&TimeOut,sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_DISCONNECTED_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_FROM_CACHE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_LISTEN_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			::InternetSetOption(m_hSession, INTERNET_OPTION_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+		}
+		return m_hSession ? S_OK : HresultFromBool();
 	}
 
 	HRESULT InternetConnectW(
@@ -100,7 +115,7 @@ public:
 		}
 		m_hConnect = ::InternetConnectW(m_hSession, CString(lpszServerName, cServerName), nServerPort, lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
 
-		return m_hConnect ? S_OK : GetLastError();
+		return m_hConnect ? S_OK : HresultFromBool();
 	}
 
 	HRESULT HttpOpenRequestW(
@@ -110,7 +125,7 @@ public:
 		_In_opt_ LPCWSTR lpszVersion= _T("HTTP/1.1"),
 		_In_opt_ LPCWSTR lpszReferrer=NULL,
 		_In_opt_z_ LPCWSTR FAR * lplpszAcceptTypes=NULL,
-		_In_ DWORD dwFlags= INTERNET_FLAG_KEEP_CONNECTION,
+		_In_ DWORD dwFlags= INTERNET_FLAG_KEEP_CONNECTION| INTERNET_FLAG_NO_AUTH,
 		_In_opt_ DWORD_PTR dwContext=NULL
 		)
 	{
@@ -120,6 +135,33 @@ public:
 		}
 
 		hUrlFile = ::HttpOpenRequestW(m_hConnect, lpszVerb, lpszObjectName, lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
-		return hUrlFile ? S_OK : GetLastError();
+
+		
+		return hUrlFile ? S_OK : HresultFromBool();
+	}
+
+	HRESULT HttpSendRequestW(
+		_In_reads_opt_(dwHeadersLength) LPCWSTR lpszHeaders,
+		_In_ DWORD dwHeadersLength,
+		_In_reads_bytes_opt_(dwOptionalLength) LPVOID lpOptional=NULL,
+		_In_ DWORD dwOptionalLength=0
+		)
+	{
+		return ::HttpSendRequestW(hUrlFile, lpszHeaders, dwHeadersLength, lpOptional, dwOptionalLength) ? S_OK : HresultFromBool();
+	}
+
+	HRESULT GetStatusCode(DWORD& Status)
+	{
+		wchar_t szStatus[8];
+		DWORD cszStatus = ArraySize(szStatus);
+
+		if (!HttpQueryInfoW(hUrlFile, HTTP_QUERY_STATUS_CODE, szStatus, &cszStatus, NULL))
+		{
+			return HresultFromBool();
+		}
+
+		Status = wcstoul(szStatus, NULL, 10);
+		
+		return S_OK;
 	}
 };

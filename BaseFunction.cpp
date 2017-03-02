@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseFunction.h"
-#include "StringHelper.h"
+//#include "StringHelper.h"
 #include <ntddvol.h>
 #include "Guard.h"
 #include <winscard.h>
@@ -21,10 +21,10 @@
 
 #include "FileHelper.cpp"
 #include "WofHelper.cpp"
-#include "Hook.cpp"
+//#include "Hook.cpp"
 #include "RegHelper.cpp"
-#include "Power.cpp"
+//#include "Power.cpp"
 #include "IniHelper.cpp"
-#include "XMLHelper.cpp"
+//#include "XMLHelper.cpp"
 #include "WinInetHelper.cpp"
 #include "StreamEx.cpp"

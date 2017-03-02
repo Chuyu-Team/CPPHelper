@@ -41,3 +41,22 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE put_Size(_In_ UINT64 Size) = 0;
 };
+
+
+
+//创建只读IStreamEx流
+IReadStream* StreamCreate(const void* pData, UINT64 Size);
+
+//根据现有流，创建一个局部流
+IReadStream* StreamCreate(IReadStream* pStream, UINT64 Start, UINT64 Size);
+
+//HRESULT StreamCreate(LPCWSTR FilePath, IReadStream** ppStream);
+
+IReadWriteStream* StreamCreate(LPCWSTR FilePath,
+	_In_ DWORD dwDesiredAccess=GENERIC_READ,
+	_In_ DWORD dwShareMode = FILE_SHARE_DELETE|FILE_SHARE_READ,
+	_In_ DWORD dwCreationDisposition = OPEN_EXISTING,
+	_In_ DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS );
+
+//从一个只读流虚拟出一个可写入的流
+IReadWriteStream* StreamCreateVirtualWrite(IReadStream* pStream);

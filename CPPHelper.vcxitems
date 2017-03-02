@@ -69,10 +69,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)IniHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RegHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)XMLHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="$(MSBuildThisFileDirectory)x64\ntdll+.lib" />
     <Library Include="$(MSBuildThisFileDirectory)x64\ntdll.lib" />
+    <Library Include="$(MSBuildThisFileDirectory)x86\ntdll+.lib" />
     <Library Include="$(MSBuildThisFileDirectory)x86\ntdll.lib" />
   </ItemGroup>
 </Project>

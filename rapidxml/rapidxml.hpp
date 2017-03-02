@@ -490,7 +490,7 @@ namespace rapidxml
 			{
 				auto *previous_begin = m_begin->previous_begin;
 
-				delete m_begin;
+				delete[] (byte*)m_begin;
 
 				m_begin = previous_begin;
 			}
@@ -551,7 +551,7 @@ namespace rapidxml
                
                 // Allocate
                 std::size_t alloc_size = sizeof(header) + pool_size;     // 2 alignments required in worst case: one for header, one for actual allocation
-                auto new_header =(header*) new char[alloc_size];
+				auto new_header = (header*) new byte[alloc_size];
                     
                
                 new_header->previous_begin = m_begin;
@@ -1351,41 +1351,25 @@ namespace rapidxml
     template<class Ch = wchar_t>
 	class xml_document : public xml_node<Ch>, public memory_pool<Ch, xml_document<Ch>>
     {
-		Ch* pStr;
     public:
+		CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > Str;
 
         //! Constructs empty XML document
         xml_document()
             : xml_node<Ch>(node_document,this)
-			, pStr(NULL)
+			//, pStr(NULL)
         {
 			//this->pDocument = ;
         }
 
 		~xml_document()
 		{
-			if (pStr)
-				delete pStr;
 		}
 
-		HRESULT Load(const Ch* String)
+		HRESULT Load(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > _Str)
 		{
-			return Load(String, ChTraitsCRT<Ch>::SafeStringLen(String));
-		}
-
-		HRESULT Load(const Ch* String,DWORD chString)
-		{
-			if (pStr)
-				delete pStr;
-
-
-			pStr = new Ch[chString+1];
-			
-			memcpy(pStr, String, chString*sizeof(Ch));
-
-			pStr[chString] = NULL;
-
-			return parse<0>(pStr);
+			Str = _Str;
+			return parse<0>((Ch*)Str.GetString());
 		}
 
 		HRESULT ConstLoad(Ch* String)
@@ -1418,7 +1402,8 @@ namespace rapidxml
             parse_bom(text);
             
             // Parse children
-            while (1)
+            //while (1)
+			for (;;)
             {
                 // Skip whitespace before node
                 skip<whitespace_pred, Flags>(text);

@@ -178,15 +178,18 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)XMLHelper.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="$(MSBuildThisFileDirectory)x64\ntdll.lib">
       <Filter>lib\x64</Filter>
     </Library>
     <Library Include="$(MSBuildThisFileDirectory)x86\ntdll.lib">
+      <Filter>lib\x86</Filter>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)x64\ntdll+.lib">
+      <Filter>lib\x64</Filter>
+    </Library>
+    <Library Include="$(MSBuildThisFileDirectory)x86\ntdll+.lib">
       <Filter>lib\x86</Filter>
     </Library>
   </ItemGroup>
