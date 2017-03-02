@@ -19,11 +19,16 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)CabinetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ComHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DiskHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DoubleBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileDialog2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)FileFindHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)FileHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Guard.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)handle.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)IniHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ISOReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)km.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ListViewCtrlEdit.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\ImageRecord.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)MsIsoReader\Udf\Enumerations.h" />
@@ -50,6 +55,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)StringHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)StringI.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)TreeViewCtrl2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)unzip.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)VirtDiskHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h" />
@@ -68,6 +75,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)FileHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)IniHelper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RegHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)StreamEx.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)unzip.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
