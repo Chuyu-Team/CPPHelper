@@ -60,6 +60,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)VirtDiskHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WinRT.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)XMLHelper.h" />
   </ItemGroup>
   <ItemGroup>
