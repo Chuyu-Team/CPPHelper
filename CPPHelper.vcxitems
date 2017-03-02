@@ -18,6 +18,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)BaseFunction.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CabinetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ComHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)DialogCTL.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DiskHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DoubleBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)FileDialog2.h" />
@@ -61,6 +62,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinRT.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)WofHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)XMLHelper.h" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +81,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)StreamEx.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)unzip.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)WinInetHelper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)WofHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="$(MSBuildThisFileDirectory)x64\ntdll+.lib" />

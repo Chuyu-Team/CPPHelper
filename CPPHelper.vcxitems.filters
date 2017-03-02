@@ -145,6 +145,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)WinRT.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)WofHelper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)DialogCTL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="$(MSBuildThisFileDirectory)ReadMe.txt" />
@@ -206,6 +212,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)unzip.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)WofHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
