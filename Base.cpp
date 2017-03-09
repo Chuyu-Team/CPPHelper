@@ -1518,7 +1518,7 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 	
 	const IMAPI_MEDIA_PHYSICAL_TYPE MediaTypes[] = { IMAPI_MEDIA_TYPE_DVDPLUSR ,IMAPI_MEDIA_TYPE_DVDDASHR, IMAPI_MEDIA_TYPE_DVDPLUSR_DUALLAYER ,IMAPI_MEDIA_TYPE_DVDDASHR_DUALLAYER,IMAPI_MEDIA_TYPE_HDDVDROM };
 
-	std::vector<IBootOptions*> BootOptions;
+	std::vector<IBootOptions*> vBootOptions;
 
 	{
 		CComPtr<IStream> pBootStream;
@@ -1536,7 +1536,7 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 
 				BootOption->AssignBootImage(pBootStream);
 
-				BootOptions.push_back(BootOption.Detach());
+				vBootOptions.push_back(BootOption.Detach());
 			}
 		}
 	}
@@ -1557,13 +1557,13 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 
 				BootOption->AssignBootImage(pBootStream);
 
-				BootOptions.push_back(BootOption.Detach());
+				vBootOptions.push_back(BootOption.Detach());
 			}
 		}
 	}
 	SAFEARRAY * psa = NULL;
 
-	if (auto Size = BootOptions.size())
+	if (auto Size = vBootOptions.size())
 	{
 		psa = SafeArrayCreateVector(VT_VARIANT, 0, Size);
 
@@ -1575,7 +1575,7 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 		{
 			pData[i].vt = VT_DISPATCH;
 
-			pData[i].pdispVal = BootOptions[i];
+			pData[i].pdispVal = vBootOptions[i];
 		}
 	}
 
@@ -1584,7 +1584,7 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 		if(psa)
 			SafeArrayDestroy(psa);
 
-		for (auto pItem : BootOptions)
+		for (auto pItem : vBootOptions)
 			pItem->Release();
 	});
 
