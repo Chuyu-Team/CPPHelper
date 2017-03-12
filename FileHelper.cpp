@@ -626,7 +626,8 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 			{
 				if (_IsDots(FindFileData.cFileName) == 0)
 				{
-					if (auto thr = UpdateFile(lpExistingFileName + FindFileData.cFileName + L"\\", lpNewFileName + FindFileData.cFileName + L"\\"))
+					auto thr = UpdateFile(lpExistingFileName + FindFileData.cFileName + L"\\", lpNewFileName + FindFileData.cFileName + L"\\");
+					if (thr!=S_OK)
 					{
 						hr = thr;
 					}
@@ -974,7 +975,7 @@ HRESULT CrateDirectorHandLink(CString To, CString From)
 			{
 				HRESULT hr = CrateDirectorHandLink(To + FindFileData.cFileName + L"\\", From + FindFileData.cFileName + L"\\");
 
-				if (hr)
+				if (hr!=S_OK)
 					return hr;
 			}
 		}

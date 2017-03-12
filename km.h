@@ -122,8 +122,8 @@ typedef enum _FIRMWARE_TYPE {
 #endif
 
 
-typedef LONG NTSTATUS;
-
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+typedef NTSTATUS *PNTSTATUS;
 
 typedef struct _UNICODE_STRING {
 	USHORT Length;
@@ -1323,22 +1323,6 @@ typedef void (NTAPI *PIO_APC_ROUTINE)(PVOID, PIO_STATUS_BLOCK, ULONG);
 
 extern "C"
 {
-	DECLSPEC_IMPORT LONG NTAPI NtDeleteKey(_In_ HANDLE KeyHandle);
-
-	NTSYSAPI NTSTATUS NTAPI NtQueryInformationFile(
-		_In_ HANDLE FileHandle,
-		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
-		_Out_ PVOID FileInformation,
-		_In_ ULONG Length,
-		_In_ FILE_INFORMATION_CLASS FileInformationClass
-		);
-
-	NTSYSAPI NTSTATUS NTAPI NtSetInformationFile(
-		_In_ HANDLE FileHandle,
-		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
-		_In_ PVOID FileInformation,
-		_In_ ULONG Length,
-		_In_ FILE_INFORMATION_CLASS FileInformationClass);
 
 	NTSYSAPI NTSTATUS NTAPI NtCreateFile(
 		_Out_     PHANDLE FileHandle,
@@ -1399,25 +1383,6 @@ extern "C"
 
 	NTSYSAPI NTSTATUS NTAPI RtlGetLastNtStatus();
 
-	NTSYSAPI NTSTATUS NTAPI NtOpenKeyEx(
-		_Out_  PHANDLE KeyHandle,
-		_In_   ACCESS_MASK DesiredAccess,
-		_In_   POBJECT_ATTRIBUTES ObjectAttributes,
-		_In_   ULONG OpenOptions
-		);
-
-
-	NTSYSAPI NTSTATUS NTAPI NtCreateKey(
-		_Out_       PHANDLE KeyHandle,
-		_In_        ACCESS_MASK DesiredAccess,
-		_In_        POBJECT_ATTRIBUTES ObjectAttributes,
-		_Reserved_  ULONG TitleIndex,
-		_In_opt_    PUNICODE_STRING Class,
-		_In_        ULONG CreateOptions,
-		_Out_opt_   PULONG Disposition
-		);
-
-
 	NTSYSAPI NTSTATUS NTAPI NtOpenFile(
 		_Out_  PHANDLE FileHandle,
 		_In_   ACCESS_MASK DesiredAccess,
@@ -1425,13 +1390,6 @@ extern "C"
 		_Out_  PIO_STATUS_BLOCK IoStatusBlock,
 		_In_   ULONG ShareAccess,
 		_In_   ULONG OpenOptions
-		);
-
-
-	NTSYSAPI NTSTATUS NTAPI NtOpenKey(
-		_Out_  PHANDLE KeyHandle,
-		_In_   ACCESS_MASK DesiredAccess,
-		_In_   POBJECT_ATTRIBUTES ObjectAttributes
 		);
 
 	NTSYSAPI NTSTATUS NTAPI NtShutdownSystem(INT Type);
@@ -1708,27 +1666,20 @@ extern "C"
 		_In_ ULONG KeySetInformationLength
 		);
 
-	NTSYSAPI
-		NTSTATUS
-		NTAPI
-		NtSetInformationFile(
-			IN HANDLE  FileHandle,
-			OUT PIO_STATUS_BLOCK  IoStatusBlock,
-			IN PVOID  FileInformation,
-			IN ULONG  Length,
-			IN FILE_INFORMATION_CLASS  FileInformationClass
-			);
+	NTSYSAPI NTSTATUS NTAPI NtSetInformationFile(
+		_In_ HANDLE FileHandle,
+		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+		_In_ PVOID FileInformation,
+		_In_ ULONG Length,
+		_In_ FILE_INFORMATION_CLASS FileInformationClass);
 
-	NTSYSAPI
-		NTSTATUS
-		NTAPI
-		NtQueryInformationFile(
-			IN HANDLE  FileHandle,
-			OUT PIO_STATUS_BLOCK  IoStatusBlock,
-			IN PVOID  FileInformation,
-			IN ULONG  Length,
-			IN FILE_INFORMATION_CLASS  FileInformationClass
-			);
+	NTSYSAPI NTSTATUS NTAPI NtQueryInformationFile(
+		_In_ HANDLE FileHandle,
+		_Out_ PIO_STATUS_BLOCK IoStatusBlock,
+		_Out_ PVOID FileInformation,
+		_In_ ULONG Length,
+		_In_ FILE_INFORMATION_CLASS FileInformationClass
+		);
 
 	typedef struct _FILE_FS_LABEL_INFORMATION {
 		ULONG VolumeLabelLength;
@@ -1924,10 +1875,6 @@ extern "C"
 		_In_ ULONG  Rva,
 		_Inout_opt_ PIMAGE_SECTION_HEADER *  SectionHeader);
 
-	NTSYSAPI VOID NTAPI RtlInitUnicodeString(
-			PUNICODE_STRING DestinationString,
-			PCWSTR SourceString	);
-
 
 	NTSYSAPI BOOLEAN NTAPI RtlCreateUnicodeString(
 			OUT PUNICODE_STRING  DestinationString,
@@ -1994,23 +1941,6 @@ extern "C"
 			);
 
 	//typedef VOID(CALLBACK*PIO_APC_ROUTINE)(VOID);
-
-	NTSYSAPI
-		NTSTATUS
-		NTAPI
-		NtCreateFile(
-			OUT PHANDLE  FileHandle,
-			IN ACCESS_MASK  DesiredAccess,
-			IN POBJECT_ATTRIBUTES  ObjectAttributes,
-			OUT PIO_STATUS_BLOCK  IoStatusBlock,
-			IN PLARGE_INTEGER  AllocationSize  OPTIONAL,
-			IN ULONG  FileAttributes,
-			IN ULONG  ShareAccess,
-			IN ULONG  CreateDisposition,
-			IN ULONG  CreateOptions,
-			IN PVOID  EaBuffer  OPTIONAL,
-			IN ULONG  EaLength
-			);
 
 	NTSYSAPI
 		NTSTATUS
@@ -2813,14 +2743,6 @@ extern "C"
 		ULONG                ModulesCount;
 		SYSTEM_MODULE        Modules[0];
 	} SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
-
-	NTSTATUS NTAPI NtQueryInformationProcess(
-		HANDLE ProcessHandle,
-		PROCESSINFOCLASS ProcessInformationClass,
-		PVOID ProcessInformation,
-		ULONG ProcessInformationLength,
-		PULONG ReturnLength
-		);
 
 	NTSTATUS NTAPI NtSetInformationProcess(
 		HANDLE ProcessHandle,
@@ -4521,14 +4443,15 @@ extern "C"
 		NTSTATUS
 		NTAPI
 		NtCreateKey(
-			__out PHANDLE KeyHandle,
-			__in ACCESS_MASK DesiredAccess,
-			__in POBJECT_ATTRIBUTES ObjectAttributes,
-			__reserved ULONG TitleIndex,
-			__in_opt PUNICODE_STRING Class,
-			__in ULONG CreateOptions,
-			__out_opt PULONG Disposition
-			);
+		_Out_       PHANDLE KeyHandle,
+		_In_        ACCESS_MASK DesiredAccess,
+		_In_        POBJECT_ATTRIBUTES ObjectAttributes,
+		_Reserved_  ULONG TitleIndex,
+		_In_opt_    PUNICODE_STRING Class,
+		_In_        ULONG CreateOptions,
+		_Out_opt_   PULONG Disposition
+		);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)

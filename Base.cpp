@@ -78,7 +78,7 @@ void AppendBstr(BSTR& Str, LPCWSTR Append)
 		//Str = TempStr;
 	}
 	cchStr--;
-	memcpy(Str + cchStr, Append, cchAppend << 1);
+	memcpy(Str + cchStr, Append, (size_t)cchAppend << 1);
 
 	Str[cchStr + cchAppend] = NULL;
 }
@@ -105,7 +105,7 @@ DWORD StrRemove(LPWSTR RemoveStr)
 }
 
 
-CString StrFormat(_In_z_ _Scanf_format_string_ LPCWSTR Format, ...)
+CString StrFormat(_In_z_ _Printf_format_string_ LPCWSTR Format, ...)
 {
 	va_list argList;
 	va_start(argList, Format);
@@ -862,7 +862,7 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 		return GetLastError();
 
 
-	BYTE PBR[10 * 512] = {};
+	BYTE PBR[10 * 512];
 
 	DWORD cbData;
 
@@ -1402,8 +1402,8 @@ HRESULT QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget)
 
 	HRESULT hr = ZwOpenSymbolicLinkObject(&hH, GENERIC_READ, &oa);
 
-	if (hr)
-		return hr;
+	if (hr!=S_OK)
+		return HRESULT_FROM_NT( hr);
 
 	UNICODE_STRING _LinkTarget = { 0, MAX_PATH * 2, LinkTarget.GetBuffer(MAX_PATH) };
 
@@ -1417,6 +1417,10 @@ HRESULT QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget)
 	if (hr == S_OK)
 	{
 		LinkTarget.ReleaseBufferSetLength(_LinkTarget.Length >> 1);
+	}
+	else
+	{
+		hr = HRESULT_FROM_NT(hr);
 	}
 
 	return hr;
@@ -1794,7 +1798,7 @@ HRESULT Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
 
 	HRESULT hr = Base642Binary((BYTE*)Binary.GetBuffer(), nLenOut, Base64String, cchString);
 
-	if (!hr)
+	if (hr==S_OK)
 	{
 		//Binary._Mylast() = Binary._Myfirst() + nLenOut;
 		Binary.ReleaseBufferSetLength(nLenOut);
@@ -2284,7 +2288,7 @@ int GetPartition(HANDLE hDevice)
 {
 	PARTITION_INFORMATION_EX PartitionInfo;
 
-	if (GetPartitionInfomation(hDevice, PartitionInfo))
+	if (GetPartitionInfomation(hDevice, PartitionInfo)!=S_OK)
 		return -1;
 
 	return PartitionInfo.PartitionNumber;
@@ -2649,7 +2653,7 @@ HRESULT NtPath2DosPath(LPCWSTR NtPath, CString& DosPath)
 	NtPath += DosPath.GetLength() - 1;
 
 	auto hr = FilterGetDosName(DosPath, DosPath.GetBuffer(MAX_PATH), MAX_PATH);
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	DosPath.ReleaseBuffer();

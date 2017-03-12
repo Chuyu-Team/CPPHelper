@@ -62,7 +62,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPBSTR pString)
 
 	HRESULT hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, NULL, &cbData);
 
-	if (hr == 0)
+	if (hr == S_OK)
 	{
 		if (cbData == 0)
 		{
@@ -74,7 +74,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPBSTR pString)
 
 		hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, String, &cbData);
 
-		if (hr)
+		if (hr!=S_OK)
 		{
 			SysFreeString(String);
 		}
@@ -94,12 +94,12 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 
 	HRESULT hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, NULL, &cbData);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 
 	hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, Str.GetBuffer(cbData / 2), &cbData);
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	Str.ReleaseBufferSetLength(cbData / 2 - 1);
@@ -123,7 +123,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pTyp
 	HKEY hSubKey;
 	HRESULT hr = RegOpenKeyEx(hKey, SubKeyPath, REG_OPTION_BACKUP_RESTORE, KEY_READ, &hSubKey);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegGetData(hSubKey, ValueName, pType, pData, pcbData);
@@ -142,7 +142,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKey, LPCWSTR ValueName, LPDWORD pData)
 	HKEY hSubKey;
 	HRESULT hr = RegOpenKeyEx(hKey, SubKey, REG_OPTION_BACKUP_RESTORE, KEY_READ, &hSubKey);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegGetData(hSubKey, ValueName, pData);
@@ -161,7 +161,7 @@ HRESULT RegSetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD Type,
 #ifdef ENABLE_BACKUP_RESTORE
 	HRESULT hr = RegCreateKeyEx(hKey, SubKeyPath, 0, NULL, REG_OPTION_BACKUP_RESTORE, KEY_WRITE, NULL, &hKey, NULL);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegSetData(hKey, ValueName, Type, Data, cbData);
@@ -184,7 +184,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, BSTR* Str)
 {
 	HRESULT hr = RegOpenKeyEx(hKey, SubKeyPath, REG_OPTION, KEY_READ, &hKey);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegGetData(hKey, ValueName, Str);
@@ -198,7 +198,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, CString& St
 {
 	HRESULT hr = RegOpenKeyEx(hKey, SubKeyPath, REG_OPTION, KEY_READ, &hKey);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegGetData(hKey, ValueName, Str);
@@ -234,14 +234,14 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, DWORD* pType, CStringA& Data)
 
 	HRESULT hr = RegGetData(hKey, ValueName, pType, Data.GetBuffer(), &cbData);
 
-	if (hr)
+	if (hr!=S_OK)
 	{
 		if (hr != ERROR_MORE_DATA)
 			return hr;
 
 		hr = RegGetData(hKey, ValueName, pType, Data.GetBuffer(cbData), &cbData);
 
-		if (hr)
+		if (hr!=S_OK)
 			return hr;
 	}
 
@@ -258,7 +258,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pTyp
 	HKEY hSubKey;
 	HRESULT hr = RegOpenKeyEx(hKey, SubKeyPath, REG_OPTION, KEY_READ, &hSubKey);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegGetData(hSubKey, ValueName, pType, Data);
@@ -274,14 +274,14 @@ HRESULT RegDeleteTree(HKEY hKey)
 	CString szValueName;
 	auto pValueName = szValueName.GetBuffer(MaxRegValueName);
 
-	HRESULT hr = S_OK, thr;
+	HRESULT thr;
 
 	DWORD KeySize, ValueSize;
 
 
-	hr = RegQueryInfoKey(hKey, NULL, NULL, NULL, &KeySize, NULL, NULL, &ValueSize, NULL, NULL, NULL, NULL);
+	HRESULT hr = RegQueryInfoKey(hKey, NULL, NULL, NULL, &KeySize, NULL, NULL, &ValueSize, NULL, NULL, NULL, NULL);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	while (KeySize--)
@@ -300,7 +300,7 @@ HRESULT RegDeleteTree(HKEY hKey)
 			}
 		}
 
-		if (thr)
+		if (thr!=S_OK)
 			hr = thr;
 	}
 
@@ -316,7 +316,7 @@ HRESULT RegDeleteTree(HKEY hKey)
 			thr = RegDeleteValue(hKey, pValueName);
 		}
 
-		if (thr)
+		if (thr!=S_OK)
 			hr = thr;
 	}
 
@@ -334,7 +334,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 
 	HRESULT hr = RegQueryInfoKey(hSrc, NULL, NULL, NULL, &KeySize, NULL, NULL, &ValueSize, NULL, &MaxDataLen, NULL, NULL), thr;
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 	CString Buffer;
 	auto pValueName = Buffer.GetBuffer(MaxRegValueName);
@@ -357,7 +357,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 			thr = RegSetData(hDst, pValueName, Type, pBuffer, ccbData);
 		}
 
-		if (thr)
+		if (thr!=S_OK)
 			hr = thr;
 	}
 
@@ -366,7 +366,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 	{
 		thr = RegEnumKey(hSrc, KeySize, pValueName, MaxRegValueName);
 
-		if (thr)
+		if (thr!=S_OK)
 		{
 			hr = thr;
 			continue;
@@ -374,7 +374,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 
 		thr = RegCopyTree(hSrc, pValueName, hDst, pValueName);
 
-		if (thr)
+		if (thr!=S_OK)
 		{
 			hr = thr;
 		}
@@ -389,12 +389,12 @@ HRESULT RegCopyTree(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey)
 
 	HRESULT hr = RegOpenKeyEx(hSrc, SrcSubKey, REG_OPTION, KEY_READ, &hSrcItem);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegCreateKeyEx(hDst, DstSubKey, 0, NULL, REG_OPTION, KEY_WRITE | KEY_READ, NULL, &hDstItem, NULL);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	return RegCopyTree(hSrcItem, hDstItem);
@@ -404,7 +404,7 @@ HRESULT RegDeleteLink(HKEY hKey, LPCWSTR DesPath)
 {
 	HKEY Item;
 	HRESULT hr = RegOpenKeyExW(hKey, DesPath, REG_OPTION_OPEN_LINK | REG_OPTION, DELETE | KEY_ALL_ACCESS, &Item);
-	if (hr)
+	if (hr!=S_OK)
 	{
 		return hr;
 	}
@@ -423,7 +423,7 @@ HRESULT RegCreateLink(HKEY hKey, LPCWSTR DesPath, LPCWSTR SrcPath)
 
 	HRESULT hr = RegCreateKeyExW(hKey, DesPath, 0, NULL, REG_OPTION | REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK, KEY_ALL_ACCESS, NULL, &hKey, NULL);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	hr = RegSetValueExW(hKey, L"SymbolicLinkValue", NULL, REG_LINK, (BYTE*)SrcPath, wcslen(SrcPath) * 2);

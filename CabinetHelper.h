@@ -260,7 +260,7 @@ static HRESULT CabExtractFile(LPCWSTR CabFilePath, LPCWSTR ExtractPath)
 	auto hfdi= FDICreate2(&erf);
 
 	if (!hfdi)
-		return erf.fError;
+		return E_FAIL;
 
 	HRESULT hr = S_OK;
 
@@ -326,7 +326,7 @@ static HRESULT CabExtractFile(LPCWSTR CabFilePath, LPCWSTR ExtractPath)
 
 	}, NULL, (void*)Unicode2UTF8(ExtractPath).GetString()))
 	{
-		hr = erf.fError;
+		hr = E_FAIL;
 	}
 
 
@@ -360,7 +360,8 @@ static HRESULT CabCreateFileInternal_U(HFCI hfci,int chRoot, CStringA FilePath, 
 			if (_IsDots(FindData.cFileName))
 				continue;
 			TempFileName += '\\';
-			if (hr = CabCreateFileInternal_U(hfci, chRoot, TempFileName, typeCompress))
+			hr = CabCreateFileInternal_U(hfci, chRoot, TempFileName, typeCompress);
+			if (hr!=S_OK)
 				break;
 		}
 		else

@@ -341,7 +341,7 @@ public:
 		//auto hr= stream->Seek(dlibMove, FILE_END, NULL);
 		//OVERLAPPED lpOverlapped = {};
 		//*(UINT64*)&lpOverlapped.Offset = ;
-		if (stream->Read(buffer,sizeof(buffer),NULL,&dlibMove))
+		if (stream->Read(buffer,sizeof(buffer),NULL,&dlibMove)!=S_OK)
 		{
 			return false;
 		}
@@ -378,7 +378,7 @@ public:
 			//if (!this.stream.ReadSafe(buffer, buffer.Length))
 			dlibMove = (UINT64)location << SectorSizeLog;
 
-			if(stream->Read(buffer,sizeof(buffer),NULL, &dlibMove))
+			if(stream->Read(buffer,sizeof(buffer),NULL, &dlibMove)!=S_OK)
 			{
 				return false;
 			}
@@ -905,7 +905,7 @@ public:
 		UINT64 dlibMove = ((UINT64)partition.Position << SectorSizeLog) + ((UINT64)blockPosition * volume.BlockSize);
 
 		//stream->Seek(dlibMove, FILE_BEGIN,NULL);
-		return !stream->Read(buffer, length,NULL, &dlibMove);
+		return stream->Read(buffer, length,NULL, &dlibMove)==S_OK;
 	}
 
 	/// <summary>

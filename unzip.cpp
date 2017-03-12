@@ -2912,7 +2912,7 @@ unzFile unzOpenInternal(IStream* fin)
 	}
 
 	//if (lufseek(fin, central_pos, SEEK_SET) != 0)
-	if (fin->Seek(LARGE_INTEGER{ central_pos }, SEEK_SET,NULL))
+	if (fin->Seek(LARGE_INTEGER{ central_pos }, SEEK_SET,NULL)!=S_OK)
 	{
 		return NULL;
 	}
@@ -3069,7 +3069,7 @@ int unzlocal_GetCurrentFileInfoInternal(unzFile s, unz_file_info *pfile_info, un
 
 	DWORD cbRead;
 
-	if (s->file->Read((void*)&file_info, sizeof(file_info), &cbRead))
+	if (s->file->Read((void*)&file_info, sizeof(file_info), &cbRead)!=S_OK)
 		return UNZ_ERRNO;
 
 	//if (unzlocal_getShort(s->file, (short*)&file_info.version))
@@ -3135,7 +3135,7 @@ int unzlocal_GetCurrentFileInfoInternal(unzFile s, unz_file_info *pfile_info, un
 		if ((file_info.size_filename > 0) && (fileNameBufferSize > 0))
 		{
 			//if (lufread(szFileName, (uInt)uSizeRead, 1, s->file) != 1)
-			if(s->file->Read(szFileName, uSizeRead,&cbRead))
+			if(s->file->Read(szFileName, uSizeRead,&cbRead)!=S_OK)
 				return UNZ_ERRNO;
 		}
 		lSeek -= uSizeRead;
@@ -3160,7 +3160,7 @@ int unzlocal_GetCurrentFileInfoInternal(unzFile s, unz_file_info *pfile_info, un
 		if ((file_info.size_file_extra > 0) && (extraFieldBufferSize > 0))
 		{
 			//if (lufread(extraField, (uInt)uSizeRead, 1, s->file) != 1)
-			if (s->file->Read(extraField, uSizeRead, &cbRead))
+			if (s->file->Read(extraField, uSizeRead, &cbRead)!=S_OK)
 				return UNZ_ERRNO;
 		}
 		lSeek += file_info.size_file_extra - uSizeRead;
@@ -3191,7 +3191,7 @@ int unzlocal_GetCurrentFileInfoInternal(unzFile s, unz_file_info *pfile_info, un
 		if ((file_info.size_file_comment > 0) && (commentBufferSize > 0))
 		{
 			//if (lufread(szComment, (uInt)uSizeRead, 1, s->file) != 1)
-			if (s->file->Read(szComment, uSizeRead, &cbRead))
+			if (s->file->Read(szComment, uSizeRead, &cbRead)!=S_OK)
 				return UNZ_ERRNO;
 		}
 		//unused lSeek+=file_info.size_file_comment - uSizeRead;
@@ -3547,7 +3547,7 @@ int unzReadCurrentFile(unzFile file, voidp buf, unsigned len, bool *reached_eof)
 				return UNZ_ERRNO;
 
 			//if (lufread(pfile_in_zip_read_info->read_buffer, uReadThis, 1, pfile_in_zip_read_info->file) != 1)
-			if(pfile_in_zip_read_info->file->Read(pfile_in_zip_read_info->read_buffer, uReadThis,(ULONG*)&uReadThis))
+			if(pfile_in_zip_read_info->file->Read(pfile_in_zip_read_info->read_buffer, uReadThis,(ULONG*)&uReadThis)!=S_OK)
 				return UNZ_ERRNO;
 			pfile_in_zip_read_info->pos_in_zipfile += uReadThis;
 			pfile_in_zip_read_info->rest_read_compressed -= uReadThis;
@@ -3705,7 +3705,7 @@ int unzGetLocalExtrafield(unzFile file, voidp buf, unsigned len)
 		return UNZ_ERRNO;
 
 	//if (lufread(buf, (uInt)size_to_read, 1, pfile_in_zip_read_info->file) != 1)
-	if(pfile_in_zip_read_info->file->Read(buf, size_to_read,&size_to_read))
+	if(pfile_in_zip_read_info->file->Read(buf, size_to_read,&size_to_read)!=S_OK)
 		return UNZ_ERRNO;
 
 	return (int)read_now;
@@ -3770,7 +3770,7 @@ int unzGetGlobalComment(unzFile file, char *szComment, uLong uSizeBuf)
 	{
 		*szComment = '\0';
 		//if (lufread(szComment, (uInt)uReadThis, 1, s->file) != 1)
-		if (s->file->Read(szComment, uReadThis,&uReadThis))
+		if (s->file->Read(szComment, uReadThis,&uReadThis)!=S_OK)
 			return UNZ_ERRNO;
 	}
 	if ((szComment != NULL) && (uSizeBuf > s->gi.size_comment)) *(szComment + s->gi.size_comment) = '\0';
@@ -3924,7 +3924,7 @@ ZRESULT TUnzip::Get(int index, ZIPENTRY *ze)
 	if (lufseek(uf->file, offset, SEEK_SET) != 0) return ZR_READ;
 	unsigned char *extra = new unsigned char[extralen];
 	//if (lufread(extra, 1, (uInt)extralen, uf->file) != extralen)
-	if(uf->file->Read(extra, extralen,(ULONG*)&extralen))
+	if(uf->file->Read(extra, extralen,(ULONG*)&extralen)!=S_OK)
 	{
 		delete[] extra;
 		return ZR_READ;

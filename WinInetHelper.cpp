@@ -138,7 +138,7 @@ HRESULT DownloadFile(LPCWSTR Url, CStringA& Buffer, LPCWSTR lpszAgent, DWORD* pC
 
 	HRESULT hr = DownloadStream(Url, (IReadWriteStream*)&MemStream, lpszAgent, pCharSet, callBack, pUserData);
 
-	if (hr)
+	if (hr!=S_OK)
 		return hr;
 
 	Buffer = MemStream.Buffer;
@@ -170,13 +170,13 @@ Start:
 
 
 	hr=Info.InternetOpenW(lpszAgent);
-		
-	if (hr)
+	
+	if (hr!=S_OK)
 		return HresultFromBool();
 
 	hr=Info.InternetConnectW();
 
-	if (hr)
+	if (hr!=S_OK)
 		return HresultFromBool();
 
 		
@@ -184,7 +184,7 @@ Start:
 
 	hr=Info.HttpOpenRequestW();
 
-	if (hr)
+	if (hr!=S_OK)
 		return HresultFromBool();
 
 	
@@ -239,7 +239,7 @@ Start:
 		//}
 		hr = Info.HttpSendRequestW(Rang, Rang.GetLength());
 	}
-		if (hr)
+		if (hr!=S_OK)
 		{
 			return hr;
 		}
@@ -247,7 +247,7 @@ Start:
 		DWORD Status;
 
 		hr=Info.GetStatusCode(Status);
-		if (hr)
+		if (hr!=S_OK)
 		{
 			return hr;
 		}
@@ -310,17 +310,17 @@ Start:
 
 				hr = Info.InternetOpenW();
 
-				if (hr)
+				if (hr!=S_OK)
 					return hr;
 
 				hr = Info.InternetConnectW();
 
-				if (hr)
+				if (hr!=S_OK)
 					return hr;
 
 				hr = Info.HttpOpenRequestW();
 
-				if (hr)
+				if (hr!=S_OK)
 				{
 					return hr;
 				}
@@ -332,13 +332,13 @@ Start:
 
 				hr = Info.HttpSendRequestW(Rang, Rang.GetLength());
 
-				if (hr)
+				if (hr!=S_OK)
 				{
 					return hr;
 				}
 
 				hr = Info.GetStatusCode(Status);
-				if (hr)
+				if (hr!=S_OK)
 				{
 					return hr;
 				}
@@ -392,7 +392,8 @@ Start:
 
 		TryCount = 5;
 
-		if (hr = pStream->Write(TempBuffer, dwBytesRead, &dwBytesRead, &UsedSize))
+		hr = pStream->Write(TempBuffer, dwBytesRead, &dwBytesRead, &UsedSize);
+		if (hr!=S_OK)
 		{
 			return hr;
 			break;
@@ -433,7 +434,7 @@ HRESULT GetUrlString(LPCWSTR Url, CString& String, DWORD CodePage /* -1Îª×Ô¶¯Ê¶±
 
 	HRESULT hr = DownloadFile(Url, Buffer, CodePage == -1 ? &CodePage : NULL, NULL, NULL);
 
-	if (hr)
+	if (hr!=S_OK)
 	{
 		return hr;
 	}

@@ -208,7 +208,7 @@ IReadStream* StreamCreate(IReadStream* pStream, UINT64 Start, UINT64 Size)
 
 	auto hr = pStream->get_Size(&TSize);
 
-	if (hr)
+	if (hr!=S_OK)
 	{
 		SetLastError(hr);
 

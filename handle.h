@@ -14,7 +14,7 @@ class ClassName\
 	operator type() {return hHandle;}\
 	BOOL IsInvalid(){return hHandle == hInvalidHandle;	}\
 	type Detach(){ type temp=hHandle; hHandle=hInvalidHandle;return temp; }\
-	HRESULT Close(){ if(IsInvalid()) return ERROR_INVALID_HANDLE; HRESULT hr=##TCloseHandle; if(!hr) hHandle=hInvalidHandle; return hr;	}\
+	HRESULT Close(){ if(IsInvalid()) return ERROR_INVALID_HANDLE; HRESULT hr=##TCloseHandle; if(hr==S_OK) hHandle=hInvalidHandle; return hr;	}\
 };
 
 //关闭句柄形式1，直接返回 HRESULT
