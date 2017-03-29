@@ -267,10 +267,24 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pTyp
 	return hr;
 }
 
-
-HRESULT RegDeleteTree(HKEY hKey)
+HRESULT RegDeleteTree2(HKEY hRootKey,LPCWSTR szSubKeyName)
 {
-	//wchar_t Buffer[MaxRegValueName];
+#ifdef ENABLE_BACKUP_RESTORE
+	CHKEY hItem;
+	HRESULT hr = RegOpenKeyEx(hRootKey, szSubKeyName, REG_OPTION, KEY_READ | KEY_WRITE | DELETE, &hItem);
+
+	if (hr != S_OK)
+		return hr;
+
+	return RegDeleteTree2(hItem);
+#else
+	return RegDeleteTreeW(hRootKey, szSubKeyName);
+#endif
+}
+
+HRESULT RegDeleteKey2(HKEY hKey)
+{
+#ifdef ENABLE_BACKUP_RESTORE
 	CString szValueName;
 	auto pValueName = szValueName.GetBuffer(MaxRegValueName);
 
@@ -281,7 +295,7 @@ HRESULT RegDeleteTree(HKEY hKey)
 
 	HRESULT hr = RegQueryInfoKey(hKey, NULL, NULL, NULL, &KeySize, NULL, NULL, &ValueSize, NULL, NULL, NULL, NULL);
 
-	if (hr!=S_OK)
+	if (hr != S_OK)
 		return hr;
 
 	while (KeySize--)
@@ -290,17 +304,10 @@ HRESULT RegDeleteTree(HKEY hKey)
 
 		if (thr == S_OK)
 		{
-			HKEY Item;
-			thr = RegOpenKeyEx(hKey, pValueName, REG_OPTION, KEY_READ | KEY_WRITE | DELETE, &Item);
-			if (thr == S_OK)
-			{
-				thr = RegDeleteTree(Item);
-
-				RegCloseKey(Item);
-			}
+			thr = RegDeleteTree2(hKey, pValueName);
 		}
 
-		if (thr!=S_OK)
+		if (thr != S_OK)
 			hr = thr;
 	}
 
@@ -316,19 +323,34 @@ HRESULT RegDeleteTree(HKEY hKey)
 			thr = RegDeleteValue(hKey, pValueName);
 		}
 
-		if (thr!=S_OK)
+		if (thr != S_OK)
 			hr = thr;
 	}
 
+	return hr;
+#else
+	return RegDeleteKey(hKey, NULL);
+#endif
+}
+
+HRESULT RegDeleteTree2(HKEY hKey)
+{
+	//wchar_t Buffer[MaxRegValueName];
+	HRESULT hr= RegDeleteKey2(hKey);
+
 	if (hr == S_OK)
 	{
-		hr = NtDeleteKey(hKey);
+		auto Status = NtDeleteKey(hKey);
+		if (Status)
+		{
+			hr = RtlNtStatusToDosError(Status);
+		}
 	}
 
 	return hr;
 }
 
-HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
+HRESULT RegCopyTree2(HKEY hSrc, HKEY hDst)
 {
 	DWORD KeySize, ValueSize, MaxDataLen, Type;
 
@@ -372,7 +394,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 			continue;
 		}
 
-		thr = RegCopyTree(hSrc, pValueName, hDst, pValueName);
+		thr = RegCopyTree2(hSrc, pValueName, hDst, pValueName);
 
 		if (thr!=S_OK)
 		{
@@ -383,7 +405,7 @@ HRESULT RegCopyTree(HKEY hSrc, HKEY hDst)
 	return hr;
 }
 
-HRESULT RegCopyTree(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey)
+HRESULT RegCopyTree2(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey)
 {
 	CHKEY hSrcItem, hDstItem;
 
@@ -397,7 +419,7 @@ HRESULT RegCopyTree(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey)
 	if (hr!=S_OK)
 		return hr;
 
-	return RegCopyTree(hSrcItem, hDstItem);
+	return RegCopyTree2(hSrcItem, hDstItem);
 }
 
 HRESULT RegDeleteLink(HKEY hKey, LPCWSTR DesPath)

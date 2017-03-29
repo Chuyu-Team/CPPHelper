@@ -163,6 +163,8 @@ CString Binary2String(const byte*pBinaryData, DWORD cbData);
 
 CStringA HexString2Binary(LPCWSTR HexString);
 
+CStringA HexString2Binary(LPCSTR HexString);
+
 
 HRESULT HresultFromBool();
 

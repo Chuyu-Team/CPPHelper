@@ -240,7 +240,7 @@ BOOL StrRegexMatch(LPCWSTR Str, LPCWSTR MatchStr)
 		return 0;
 }
 
-LPCWSTR __HexStr = L"0123456789ABCDEF";
+LPCSTR __HexStr = "0123456789ABCDEF";
 
 CString Binary2String(const byte*pBinaryData, DWORD cbData)
 {
@@ -261,6 +261,20 @@ CStringA HexString2Binary(LPCWSTR HexString)
 	CStringA Data;
 
 	for (;*HexString;)
+	{
+		auto Ch = Char2Hex(*(HexString++)) << 4;
+
+		Data.AppendChar(Ch | Char2Hex(*(HexString++)));
+	}
+
+	return Data;
+}
+
+CStringA HexString2Binary(LPCSTR HexString)
+{
+	CStringA Data;
+
+	for (; *HexString;)
 	{
 		auto Ch = Char2Hex(*(HexString++)) << 4;
 

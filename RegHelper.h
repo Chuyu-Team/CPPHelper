@@ -46,15 +46,16 @@ HRESULT RegSetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD Data)
 
 HRESULT RegSetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, LPCWSTR String);
 
+//仅清空Key，但是不删除Key本身
+HRESULT RegDeleteKey2(HKEY hKey);
 
+HRESULT RegDeleteTree2(HKEY hRootKey, LPCWSTR szSubKeyName);
 
+HRESULT RegDeleteTree2(HKEY hKey);
 
+HRESULT RegCopyTree2(HKEY hSrc, HKEY hDst);
 
-HRESULT RegDeleteTree(HKEY hKey);
-
-HRESULT RegCopyTree(HKEY hSrc, HKEY hDst);
-
-HRESULT RegCopyTree(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey);
+HRESULT RegCopyTree2(HKEY hSrc, LPCWSTR SrcSubKey, HKEY hDst, LPCWSTR DstSubKey);
 
 HRESULT RegDeleteLink(HKEY hKey, LPCWSTR DesPath);
 
