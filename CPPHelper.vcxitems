@@ -18,6 +18,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)BaseFunction.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)CabinetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ComHelper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)CriticalSectionHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DialogCTL.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DiskHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)DoubleBuffer.h" />
@@ -58,6 +59,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Thread.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)TreeViewCtrl2.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)unzip.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)VCCompatible.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)VirtDiskHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinInetHelper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WinnlsHelper.h" />

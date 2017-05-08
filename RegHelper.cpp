@@ -277,6 +277,8 @@ HRESULT RegDeleteTree2(HKEY hRootKey,LPCWSTR szSubKeyName)
 		return hr;
 
 	return RegDeleteTree2(hItem);
+#elif defined(_ATL_XP_TARGETING)
+	return SHDeleteKeyW(hRootKey, szSubKeyName);
 #else
 	return RegDeleteTreeW(hRootKey, szSubKeyName);
 #endif

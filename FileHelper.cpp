@@ -847,11 +847,26 @@ HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4])
 
 	VS_FIXEDFILEINFO* pFileInfo = NULL;
 	UINT uLen;
+#ifndef _ATL_XP_TARGETING
 
 	if (!VerQueryValue(hGlobal, L"\\", (LPVOID*)&pFileInfo, &uLen))
 	{
 		return GetLastError();
 	}
+#else
+	//XP系统不允许直接调用，需要先复制到一个内存块
+	DWORD cbData = SizeofResource(hFileMoudle, hRsrcVersion);
+
+	void* pData=alloca(cbData);
+
+	memcpy(pData, hGlobal, cbData);
+
+	if (!VerQueryValue(pData, L"\\", (LPVOID*)&pFileInfo, &uLen))
+	{
+		return GetLastError();
+	}
+
+#endif
 
 
 	*((DWORD*)Version) = pFileInfo->dwFileVersionLS;
