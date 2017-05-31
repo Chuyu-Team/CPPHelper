@@ -42,15 +42,38 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPDWORD pType, void* Data, DWOR
 HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPDWORD pData)
 {
 	DWORD cbData = sizeof(DWORD);
+#ifdef _ATL_XP_TARGETING
+	DWORD Type;
+	DWORD Error = RegQueryValueEx(hKey, ValueName, NULL, &Type, (BYTE*)pData, &cbData);
+	if (Error)
+		return Error;
 
+	if (Type != REG_DWORD)
+		return ERROR_UNSUPPORTED_TYPE;
+
+	return S_OK;
+#else
 	return RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_DWORD, NULL, pData, &cbData);
+#endif
 }
 
 HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, PUINT64 pData)
 {
 	DWORD cbData = sizeof(UINT64);
+#ifdef _ATL_XP_TARGETING
+	DWORD Type;
 
+	DWORD Error = RegQueryValueEx(hKey, ValueName, NULL, &Type, (BYTE*)pData, &cbData);
+	if (Error)
+		return Error;
+
+	if (Type != REG_QWORD)
+		return ERROR_UNSUPPORTED_TYPE;
+
+	return S_OK;
+#else
 	return RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_QWORD, NULL, pData, &cbData);
+#endif
 }
 
 
@@ -59,12 +82,48 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, PUINT64 pData)
 HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPBSTR pString)
 {
 	DWORD cbData = 0;
+#ifdef _ATL_XP_TARGETING
+	DWORD Type;
+	HRESULT hr = RegQueryValueExW(hKey, ValueName, NULL, &Type, NULL, &cbData);
+	if (hr != S_OK)
+		return hr;
 
+	switch (Type)
+	{
+	case REG_SZ:
+	case REG_MULTI_SZ:
+	case REG_EXPAND_SZ:
+		break;
+	default:
+		return ERROR_UNSUPPORTED_TYPE;
+		break;
+	}
+
+	if (cbData < 2)
+	{
+		*pString = NULL;
+		return S_OK;
+	}
+
+	BSTR String = SysAllocStringByteLen(NULL, cbData - 2);
+
+	hr = RegQueryValueEx(hKey, ValueName, NULL, NULL, (byte*)String, &cbData);
+	if (hr != S_OK)
+	{
+		SysFreeString(String);
+	}
+	else
+	{
+		*pString = String;
+	}
+
+	return hr;
+#else
 	HRESULT hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, NULL, &cbData);
 
 	if (hr == S_OK)
 	{
-		if (cbData == 0)
+		if (cbData < 2)
 		{
 			*pString = NULL;
 			return S_OK;
@@ -85,26 +144,68 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPBSTR pString)
 	}
 
 	return hr;
+#endif
 }
 
 
 HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 {
 	DWORD cbData = 0;
+#ifdef _ATL_XP_TARGETING
+	DWORD Type;
+	HRESULT hr = RegQueryValueExW(hKey, ValueName, NULL, &Type, NULL, &cbData);
 
+	if (hr != S_OK)
+		return hr;
+
+	switch (Type)
+	{
+	case REG_SZ:
+	case REG_MULTI_SZ:
+	case REG_EXPAND_SZ:
+		break;
+	default:
+		return ERROR_UNSUPPORTED_TYPE;
+		break;
+	}
+
+	if (cbData < 2)
+	{
+		Str.Empty();
+		return S_OK;
+	}
+
+	DWORD cString = cbData / 2 - 1;
+
+	hr = RegQueryValueEx(hKey, ValueName, NULL, NULL, (byte*)Str.GetBuffer(cString), &cbData);
+	if (hr != S_OK)
+		return hr;
+
+	Str.ReleaseBufferSetLength(cString);
+
+	return S_OK;
+#else
 	HRESULT hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, NULL, &cbData);
 
 	if (hr!=S_OK)
 		return hr;
 
+	if (cbData < 2)
+	{
+		Str.Empty();
+		return S_OK;
+	}
 
-	hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, Str.GetBuffer(cbData / 2), &cbData);
+	DWORD cString = cbData / 2 - 1;
+
+	hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, Str.GetBuffer(cString), &cbData);
 	if (hr!=S_OK)
 		return hr;
 
-	Str.ReleaseBufferSetLength(cbData / 2 - 1);
+	Str.ReleaseBufferSetLength(cString);
 
 	return S_OK;
+#endif
 }
 
 HRESULT RegSetData(HKEY hKey, LPCWSTR ValueName, LPCWSTR String)
@@ -131,6 +232,8 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pTyp
 	RegCloseKey(hSubKey);
 
 	return hr;
+#elif defined(_ATL_XP_TARGETING)
+	return SHGetValueW(hKey, SubKeyPath, ValueName, pType, pData, pcbData);
 #else
 	return RegGetValue(hKey, SubKeyPath, ValueName, RRF_RT_ANY | RRF_NOEXPAND, pType, pData, pcbData);
 #endif
@@ -138,9 +241,9 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pTyp
 
 HRESULT RegGetData(HKEY hKey, LPCWSTR SubKey, LPCWSTR ValueName, LPDWORD pData)
 {
-#ifdef ENABLE_BACKUP_RESTORE
+#if defined(ENABLE_BACKUP_RESTORE)||defined(_ATL_XP_TARGETING)
 	HKEY hSubKey;
-	HRESULT hr = RegOpenKeyEx(hKey, SubKey, REG_OPTION_BACKUP_RESTORE, KEY_READ, &hSubKey);
+	HRESULT hr = RegOpenKeyEx(hKey, SubKey, REG_OPTION, KEY_READ, &hSubKey);
 
 	if (hr!=S_OK)
 		return hr;
@@ -159,16 +262,19 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR SubKey, LPCWSTR ValueName, LPDWORD pData)
 HRESULT RegSetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD Type, const void* Data, DWORD cbData)
 {
 #ifdef ENABLE_BACKUP_RESTORE
-	HRESULT hr = RegCreateKeyEx(hKey, SubKeyPath, 0, NULL, REG_OPTION_BACKUP_RESTORE, KEY_WRITE, NULL, &hKey, NULL);
+	HKEY hSubKey;
+	HRESULT hr = RegCreateKeyEx(hKey, SubKeyPath, 0, NULL, REG_OPTION_BACKUP_RESTORE, KEY_WRITE, NULL, &hSubKey, NULL);
 
 	if (hr!=S_OK)
 		return hr;
 
-	hr = RegSetData(hKey, ValueName, Type, Data, cbData);
+	hr = RegSetData(hSubKey, ValueName, Type, Data, cbData);
 
-	RegCloseKey(hKey);
+	RegCloseKey(hSubKey);
 
 	return hr;
+#elif defined(_ATL_XP_TARGETING)
+	return SHSetValueW(hKey, SubKeyPath, ValueName, Type, Data, cbData);
 #else
 	return RegSetKeyValue(hKey, SubKeyPath, ValueName, Type, Data, cbData);
 #endif
@@ -342,7 +448,7 @@ HRESULT RegDeleteTree2(HKEY hKey)
 
 	if (hr == S_OK)
 	{
-		auto Status = NtDeleteKey(hKey);
+		NTSTATUS Status = NtDeleteKey(hKey);
 		if (Status)
 		{
 			hr = RtlNtStatusToDosError(Status);
@@ -361,13 +467,13 @@ HRESULT RegCopyTree2(HKEY hSrc, HKEY hDst)
 	if (hr!=S_OK)
 		return hr;
 	CString Buffer;
-	auto pValueName = Buffer.GetBuffer(MaxRegValueName);
+	LPWSTR pValueName = Buffer.GetBuffer(MaxRegValueName);
 
 	DWORD cchValueName;
 	DWORD ccbData;
 	CStringA DataBuffer;
 
-	auto pBuffer = DataBuffer.GetBuffer(MaxDataLen);
+	LPSTR pBuffer = DataBuffer.GetBuffer(MaxDataLen);
 
 	while (ValueSize--)
 	{
@@ -434,8 +540,12 @@ HRESULT RegDeleteLink(HKEY hKey, LPCWSTR DesPath)
 	}
 
 	hr = RegDeleteValue(Item, L"SymbolicLinkValue");
-	hr = NtDeleteKey(Item);
-	//if (hr)
+	
+	if (NTSTATUS Status = NtDeleteKey(Item))
+	{
+		hr = RtlNtStatusToDosError(Status);
+	}
+
 	RegCloseKey(Item);
 
 	return hr < 0 ? hr : 0;

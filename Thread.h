@@ -94,7 +94,7 @@ public:
 	_beginthreadex_proc_type Call;
 	void* UserData;
 
-	//HANDLE hWorkEvent;
+	HANDLE hWorkEvent;
 
 	volatile LONG Count;
 	BOOL bCancelled;
@@ -103,16 +103,25 @@ public:
 		, UserData(_UserData)
 		, Count(0)
 		, bCancelled(FALSE)
-		//, hWorkEvent(CreateEvent(NULL,TRUE,TRUE,NULL))
+		, hWorkEvent(CreateEvent(NULL,TRUE,TRUE,NULL))
 	{
 	}
 
 	template<class _Ptr>
 	//dwCreationFlags请参考CreateThread
 	CATLThreadPoolWorker(_Ptr&& _ptr)
-		: UserData(&_ptr)
-		, Count(0)
-		, bCancelled(FALSE)
+		:CATLThreadPoolWorker(
+			[](void * UserData) ->unsigned
+			{
+				auto Ptr = (_Ptr*)UserData;
+
+
+				(*Ptr)();
+
+				return 0;
+
+			},
+			&_ptr)
 	{
 		Call=[](void * UserData) ->unsigned
 		{
@@ -132,7 +141,30 @@ public:
 		if(!bCancelled)
 			Call(UserData);
 
-		InterlockedDecrement(&Count);
+		Release();
+	}
+
+	//添加任务引用
+	void AddRef()
+	{
+		if (InterlockedIncrement(&Count)==1)
+		{
+			ResetEvent(hWorkEvent);
+		}
+	}
+
+	//减少任务引用
+	void Release()
+	{
+		if (InterlockedDecrement(&Count) == 0)
+		{
+			SetEvent(hWorkEvent);
+		}
+	}
+
+	DWORD __fastcall Wait(_In_ DWORD dwMilliseconds= INFINITE)
+	{
+		return WaitForSingleObject(hWorkEvent,dwMilliseconds);
 	}
 };
 
@@ -173,7 +205,7 @@ public:
 
 	BOOL QueueRequest(_In_ typename CATLThreadPoolWorkerInternal::RequestType request)
 	{
-		InterlockedIncrement(&request->Count);
+		request->AddRef();
 		
 		if (CThreadPool<CATLThreadPoolWorkerInternal>::QueueRequest(request))
 		{
@@ -183,8 +215,51 @@ public:
 		{
 			//提交任务失败
 
-			InterlockedDecrement(&request->Count);
+			request->Release();
 			return FALSE;
 		}
+	}
+
+	//并行For，使用指针
+	template<class Item, class _Ptr>
+	void For(Item* pItems, LONG Count, _Ptr& _ptr)
+	{
+		volatile LONG Index = -1;
+
+		CATLThreadPoolWorker Work([&Index, pItems,&_ptr]()
+		{
+			_ptr(pItems[InterlockedIncrement(&Index)]);
+		});
+
+		for (long i = 0; i != Count; ++i)
+		{
+			Work.John();
+		}
+
+		Work.Wait();
+	}
+
+	//并行For，使用迭代器
+	template<class iterator, class _Ptr>
+	void For(iterator Begin, iterator End, _Ptr& _ptr)
+	{
+		CCriticalSection Lock;
+		iterator pItems = Begin;
+		CATLThreadPoolWorker Work([&pItems,&Lock, &_ptr]()
+		{
+			Lock.Lock();
+
+			auto Item = *(pItems++);
+			Lock.Unlock();
+
+			_ptr(Item);
+		});
+
+		for (; Begin!= End; ++Begin)
+		{
+			Work.John();
+		}
+
+		Work.Wait();
 	}
 };

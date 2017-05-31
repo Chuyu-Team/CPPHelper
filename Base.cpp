@@ -180,7 +180,7 @@ CString StrFormatByte(UINT64 ByteSize)
 
 CStringA Unicode2UTF8(LPCWSTR Str)
 {
-	return Unicode2UTF8(Str, StrLenW(Str));
+	return Unicode2UTF8(Str, StrLen(Str));
 }
 
 CStringA Unicode2UTF8(LPCWSTR Str,DWORD cStr)
@@ -1869,7 +1869,7 @@ CString UTF8ToUnicode(const char* Src, DWORD cchSrc)
 
 CString UTF8ToUnicode(const char* Src)
 {
-	return UTF8ToUnicode(Src, StrLenA(Src));
+	return UTF8ToUnicode(Src, StrLen(Src));
 }
 
 
@@ -2323,7 +2323,7 @@ HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath)
 		return GetLastError();
 	}
 
-	if (StrCmpN(szVHDFilePath, L"\\??\\", 4) == 0)
+	if (StrCmpN(szVHDFilePath, L"\\??\\", StaticStrLen(L"\\??\\")) == 0)
 	{
 		VHDFilePath = szVHDFilePath + 4;
 	}
@@ -2884,4 +2884,16 @@ HRESULT HresultFromBool()
 		//错误代码为0 转换为非指定的错误
 		return E_FAIL;
 	}
+}
+
+int __fastcall StrLen(_In_opt_z_ LPCSTR psz)
+{
+	// returns length in bytes
+	return (psz != NULL) ? (int)strlen(psz) : 0;
+}
+
+int __fastcall StrLen(_In_opt_z_ LPCWSTR psz)
+{
+	// returns length in wchar_ts
+	return (psz != NULL) ? (int)wcslen(psz) : 0;
 }

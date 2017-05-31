@@ -3,14 +3,9 @@
 
 
 //¼ÆËã×Ö·û´®³¤¶È
-#define StrLenW ChTraitsCRT<wchar_t>::SafeStringLen
-#define StrLenA ChTraitsCRT<char>::SafeStringLen
+int __fastcall StrLen(_In_opt_z_ LPCSTR psz);
 
-#ifdef UNICODE
-#define StrLen StrLenW
-#else
-#define StrLen StrLenA
-#endif
+int __fastcall StrLen(_In_opt_z_ LPCWSTR psz);
 
 #define StaticStrLen(str) (ArraySize(str)-1)
 

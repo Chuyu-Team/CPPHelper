@@ -192,7 +192,15 @@ public:
 						auto start = ((UINT64)part.Position << SectorSizeLog) + ((UINT64)logBlockNumber * currentBlockSize);
 
 						//返回一个局部流
-						*ppStream = StreamCreate(stream, start, pItem->get_Size());
+						auto pStream = StreamCreate(stream, start, pItem->get_Size());
+						if (pStream == NULL)
+						{
+							return HresultFromBool();
+						}
+						else
+						{
+							*ppStream = pStream;
+						}
 						//*ppStream = new CStreamOffect(stream, start, pItem->get_Size());
 					}
 

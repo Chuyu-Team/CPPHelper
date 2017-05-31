@@ -55,29 +55,29 @@ public:
 
 	friend bool operator!=(const CStringI& a, const CString& b)
 	{
-		return StrCmpI(a, b) != 0;
+		return a.CompareNoCase(b) != 0;
 	}
 
 	friend bool operator==(const CStringI& a, const CStringI& b)
 	{
-		return StrCmpI(a, b) == 0;
+		return a.CompareNoCase(b) == 0;
 	}
 
 	friend bool operator<(const CStringI& a, const CStringI& b)
 	{
-		return StrCmpI(a, b)<0;
+		return a.CompareNoCase(b)<0;
 	}
 	friend bool operator<=(const CStringI& a, const CStringI& b)
 	{
-		return StrCmpI(a, b) <= 0;
+		return a.CompareNoCase(b) <= 0;
 	}
 
 	friend bool operator>(const CStringI& a, const CStringI& b)
 	{
-		return  StrCmpI(a, b)>0;
+		return a.CompareNoCase(b)>0;
 	}
 	friend bool operator>=(const CStringI& a, const CStringI& b)
 	{
-		return StrCmpI(a, b) >= 0;
+		return a.CompareNoCase(b) >= 0;
 	}
 };
