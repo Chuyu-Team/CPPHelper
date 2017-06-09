@@ -63,9 +63,9 @@ ULONG64 GetDriverUseSize(LPCWSTR Latter);
 
 BOOL CheckUpdateFile(CString Src, CString Des, std::map<UINT64, DWORD>&FileMap, UINT64* pSize);
 
-HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4]);
+HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
 
-HRESULT GetFileVersion(LPCWSTR FilePath, UINT16 Version[4]);
+HRESULT GetFileVersion(LPCWSTR FilePath, UINT16 Version[4], WORD wLanguage = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
 
 UINT64 GetDirectoryAllocationSize(LPCWSTR FilePath, std::map<UINT64, DWORD>& FileMap);
 

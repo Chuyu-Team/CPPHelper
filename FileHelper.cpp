@@ -830,9 +830,9 @@ HRESULT MoveDirectory(CString ExistingDirectoryPath, CString NewDirectoryInfoPat
 }
 
 
-HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4])
+HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
 {
-	HRSRC hRsrcVersion = FindResource(hFileMoudle, MAKEINTRESOURCE(1), RT_VERSION);
+	HRSRC hRsrcVersion = FindResourceExW(hFileMoudle, RT_VERSION, MAKEINTRESOURCE(1), wLanguage);
 
 	if (hRsrcVersion == NULL)
 	{
@@ -876,11 +876,11 @@ HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4])
 }
 
 //获得文件版本号
-HRESULT GetFileVersion(LPCWSTR FilePath, UINT16 Version[4])
+HRESULT GetFileVersion(LPCWSTR FilePath, UINT16 Version[4], WORD wLanguage)
 {
 	CHModule hFileMoudle = LoadLibraryEx(FilePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
 
-	return hFileMoudle.IsInvalid() ? GetLastError() : GetFileVersion(hFileMoudle, Version);
+	return hFileMoudle.IsInvalid() ? GetLastError() : GetFileVersion(hFileMoudle, Version, wLanguage);
 }
 
 
