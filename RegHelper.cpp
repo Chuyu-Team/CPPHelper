@@ -181,7 +181,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 	if (hr != S_OK)
 		return hr;
 
-	Str.ReleaseBufferSetLength(cString);
+	Str.ReleaseBufferSetLength(cbData / 2 - 1);
 
 	return S_OK;
 #else
@@ -202,7 +202,7 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 	if (hr!=S_OK)
 		return hr;
 
-	Str.ReleaseBufferSetLength(cString);
+	Str.ReleaseBufferSetLength(cbData / 2 - 1);
 
 	return S_OK;
 #endif
