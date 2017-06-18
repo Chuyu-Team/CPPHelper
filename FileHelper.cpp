@@ -1011,6 +1011,9 @@ HRESULT CrateDirectorHandLink(CString To, CString From)
 
 FilePathType GetFileType(LPCWSTR FilePath)
 {
+	if(StrEmpty(FilePath))
+		return FilePathType::PathNotExist;
+
 	UNICODE_STRING usFileFile;
 	if (!RtlDosPathNameToNtPathName_U(FilePath, &usFileFile, NULL, NULL))
 	{

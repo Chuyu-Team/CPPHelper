@@ -233,7 +233,7 @@ public:
 
 		for (long i = 0; i != Count; ++i)
 		{
-			Work.John();
+			QueueRequest(&Work);
 		}
 
 		Work.Wait();
@@ -249,7 +249,7 @@ public:
 		{
 			Lock.Lock();
 
-			auto Item = *(pItems++);
+			auto& Item = *(pItems++);
 			Lock.Unlock();
 
 			_ptr(Item);
@@ -257,7 +257,7 @@ public:
 
 		for (; Begin!= End; ++Begin)
 		{
-			Work.John();
+			QueueRequest(&Work);
 		}
 
 		Work.Wait();
