@@ -1853,7 +1853,7 @@ void UTF8ToUnicode(const char* Src, DWORD chSrc, CString& Dest)
 {
 	assert(chSrc != -1);
 
-	chSrc=MultiByteToWideChar(CP_UTF8, 0, Src, chSrc, Dest.GetBuffer(chSrc), chSrc + 1);
+	chSrc=MultiByteToWideChar(CP_UTF8, 0, Src, chSrc, Dest.GetBuffer(chSrc), chSrc);
 
 	Dest.ReleaseBufferSetLength(chSrc);
 }

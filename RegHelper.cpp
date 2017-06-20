@@ -81,70 +81,16 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, PUINT64 pData)
 //根据名称获取数据
 HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, LPBSTR pString)
 {
-	DWORD cbData = 0;
-#ifdef _ATL_XP_TARGETING
-	DWORD Type;
-	HRESULT hr = RegQueryValueExW(hKey, ValueName, NULL, &Type, NULL, &cbData);
+	CString String;
+
+	auto hr = RegGetData(hKey, ValueName, String);
+
 	if (hr != S_OK)
 		return hr;
 
-	switch (Type)
-	{
-	case REG_SZ:
-	case REG_MULTI_SZ:
-	case REG_EXPAND_SZ:
-		break;
-	default:
-		return ERROR_UNSUPPORTED_TYPE;
-		break;
-	}
+	*pString = String.AllocSysString();
 
-	if (cbData < 2)
-	{
-		*pString = NULL;
-		return S_OK;
-	}
-
-	BSTR String = SysAllocStringByteLen(NULL, cbData - 2);
-
-	hr = RegQueryValueEx(hKey, ValueName, NULL, NULL, (byte*)String, &cbData);
-	if (hr != S_OK)
-	{
-		SysFreeString(String);
-	}
-	else
-	{
-		*pString = String;
-	}
-
-	return hr;
-#else
-	HRESULT hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, NULL, &cbData);
-
-	if (hr == S_OK)
-	{
-		if (cbData < 2)
-		{
-			*pString = NULL;
-			return S_OK;
-		}
-
-		BSTR String = SysAllocStringByteLen(NULL, cbData - 2);
-
-		hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, String, &cbData);
-
-		if (hr!=S_OK)
-		{
-			SysFreeString(String);
-		}
-		else
-		{
-			*pString = String;
-		}
-	}
-
-	return hr;
-#endif
+	return S_OK;
 }
 
 
@@ -169,19 +115,22 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 		break;
 	}
 
-	if (cbData < 2)
-	{
-		Str.Empty();
-		return S_OK;
-	}
+	DWORD cString = (cbData+2) / 2;
+	auto pBuffer = Str.GetBuffer(cString);
 
-	DWORD cString = cbData / 2 - 1;
-
-	hr = RegQueryValueEx(hKey, ValueName, NULL, NULL, (byte*)Str.GetBuffer(cString), &cbData);
+	hr = RegQueryValueEx(hKey, ValueName, NULL, NULL, (byte*)pBuffer, &cbData);
 	if (hr != S_OK)
 		return hr;
 
-	Str.ReleaseBufferSetLength(cbData / 2 - 1);
+	cString = cbData / 2;
+
+	if (cString)
+	{
+		if (pBuffer[cString - 1] == NULL)
+			--cString;
+	}
+
+	Str.ReleaseBufferSetLength(cString);
 
 	return S_OK;
 #else
@@ -190,19 +139,18 @@ HRESULT RegGetData(HKEY hKey, LPCWSTR ValueName, CString& Str)
 	if (hr!=S_OK)
 		return hr;
 
-	if (cbData < 2)
-	{
-		Str.Empty();
-		return S_OK;
-	}
-
-	DWORD cString = cbData / 2 - 1;
+	DWORD cString = (cbData+2) / 2;
 
 	hr = RegGetValue(hKey, NULL, ValueName, RRF_RT_REG_SZ | RRF_RT_REG_MULTI_SZ | RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND, NULL, Str.GetBuffer(cString), &cbData);
 	if (hr!=S_OK)
 		return hr;
 
-	Str.ReleaseBufferSetLength(cbData / 2 - 1);
+	cString = cbData / 2;
+
+	if (cString)
+		--cString;
+
+	Str.ReleaseBufferSetLength(cString);
 
 	return S_OK;
 #endif
