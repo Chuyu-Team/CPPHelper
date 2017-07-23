@@ -4,6 +4,7 @@
 #define SDK_KM_H
 
 #define UMDF_USING_NTSTATUS
+#include <minwindef.h>
 #include <winnt.h>
 
 #pragma comment(lib,"ntdll.lib")
@@ -442,80 +443,61 @@ typedef struct _PEB_FREE_BLOCK
 	ULONG Size;
 } PEB_FREE_BLOCK;
 
-// XP SP3 version
-typedef struct _PEB_XP {
-	BOOLEAN InheritedAddressSpace;
-	BOOLEAN ReadImageFileExecOptions;
-	BOOLEAN BeingDebugged;
-	BOOLEAN Spare;
-	HANDLE Mutant;
-	PVOID ImageBaseAddress;
-	PPEB_LDR_DATA_XP LoaderData;
-	RTL_USER_PROCESS_PARAMETERS_XP* ProcessParameters;
-	PVOID SubSystemData;
-	PVOID ProcessHeap;
-	CRITICAL_SECTION* FastPebLock;
-	PVOID FastPebLockRoutine;
-	PVOID FastPebUnlockRoutine;
-	ULONG EnvironmentUpdateCount;
-	PVOID* KernelCallbackTable;
-	ULONG SystemReserved[1];
-	ULONG AtlThunkSListPtr32;
-	PEB_FREE_BLOCK* FreeList;
-	ULONG TlsExpansionCounter;
-	PVOID TlsBitmap;
-	ULONG TlsBitmapBits[2];
-	PVOID ReadOnlySharedMemoryBase;
-	PVOID ReadOnlySharedMemoryHeap;
-	PVOID* ReadOnlyStaticServerData;
-	PVOID AnsiCodePageData;
-	PVOID OemCodePageData;
-	PVOID UnicodeCaseTableData;
-	ULONG NumberOfProcessors;
-	ULONG NtGlobalFlag;
-	LARGE_INTEGER CriticalSectionTimeout;
-	ULONG HeapSegmentReserve;
-	ULONG HeapSegmentCommit;
-	ULONG HeapDeCommitTotalFreeThreshold;
-	ULONG HeapDeCommitFreeBlockThreshold;
-	ULONG NumberOfHeaps;
-	ULONG MaximumNumberOfHeaps;
-	PVOID* *ProcessHeaps;
-	PVOID GdiSharedHandleTable;
-	PVOID ProcessStarterHelper;
-	PVOID GdiDCAttributeList;
-	PVOID LoaderLock;
-	ULONG OSMajorVersion;
-	ULONG OSMinorVersion;
-	USHORT OSBuildNumber;
-	USHORT OSPlatformId;
-	ULONG ImageSubSystem;
-	ULONG ImageSubSystemMajorVersion;
-	ULONG ImageSubSystemMinorVersion;
-	ULONG ImageProcessAffinityMask;
-	ULONG GdiHandleBuffer[34];
-	PVOID PostProcessInitRoutine;
-	ULONG TlsExpansionBitmap;
-	ULONG TlsExpansionBitmapBits[32];
-	ULONG SessionId;
-	ULARGE_INTEGER AppCompatFlags;
-	ULARGE_INTEGER AppcompatFlagsUser;
-	PVOID pShimData;
-	PVOID AppCompatInfo;
-	UNICODE_STRING CSDVersion;
-	PVOID ActivateContextData;
-	PVOID ProcessAssemblyStorageMap;
-	PVOID SystemDefaultActivationContextData;
-	PVOID SystemAssemblyStorageMap;
-	ULONG MinimumStackCommit;
-} PEB_XP, *PPEB_XP;
+typedef struct PEB_LDR_DATA *PPEB_LDR_DATA;
 
-// Win Vista SP1 / SP2 / Win 7 / Win 7 SP1 version
-typedef struct _PEB_VISTA_7 {
+
+#define RTL_MAX_DRIVE_LETTERS 32
+#define RTL_DRIVE_LETTER_VALID (USHORT)0x0001
+
+typedef struct _RTL_USER_PROCESS_PARAMETERS
+{
+	ULONG MaximumLength;
+	ULONG Length;
+
+	ULONG Flags;
+	ULONG DebugFlags;
+
+	HANDLE ConsoleHandle;
+	ULONG ConsoleFlags;
+	HANDLE StandardInput;
+	HANDLE StandardOutput;
+	HANDLE StandardError;
+
+	CURDIR CurrentDirectory;
+	UNICODE_STRING DllPath;
+	UNICODE_STRING ImagePathName;
+	UNICODE_STRING CommandLine;
+	PVOID Environment;
+
+	ULONG StartingX;
+	ULONG StartingY;
+	ULONG CountX;
+	ULONG CountY;
+	ULONG CountCharsX;
+	ULONG CountCharsY;
+	ULONG FillAttribute;
+
+	ULONG WindowFlags;
+	ULONG ShowWindowFlags;
+	UNICODE_STRING WindowTitle;
+	UNICODE_STRING DesktopInfo;
+	UNICODE_STRING ShellInfo;
+	UNICODE_STRING RuntimeData;
+	RTL_DRIVE_LETTER_CURDIR CurrentDirectories[RTL_MAX_DRIVE_LETTERS];
+
+	ULONG EnvironmentSize;
+	ULONG EnvironmentVersion;
+	PVOID PackageDependencyData;
+	ULONG ProcessGroupId;
+	ULONG LoaderThreads;
+} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
+
+// symbols
+typedef struct _PEB
+{
 	BOOLEAN InheritedAddressSpace;
 	BOOLEAN ReadImageFileExecOptions;
 	BOOLEAN BeingDebugged;
-#include <pshpack1.h>
 	union
 	{
 		BOOLEAN BitField;
@@ -523,23 +505,25 @@ typedef struct _PEB_VISTA_7 {
 		{
 			BOOLEAN ImageUsesLargePages : 1;
 			BOOLEAN IsProtectedProcess : 1;
-			BOOLEAN IsLegacyProcess : 1;
 			BOOLEAN IsImageDynamicallyRelocated : 1;
 			BOOLEAN SkipPatchingUser32Forwarders : 1;
-			BOOLEAN SpareBits : 3;
+			BOOLEAN IsPackagedProcess : 1;
+			BOOLEAN IsAppContainer : 1;
+			BOOLEAN IsProtectedProcessLight : 1;
+			BOOLEAN IsLongPathAwareProcess : 1;
 		};
 	};
-#include <poppack.h>
+
 	HANDLE Mutant;
+
 	PVOID ImageBaseAddress;
-	PPEB_LDR_DATA_VISTA_7 LoaderData;
-	RTL_USER_PROCESS_PARAMETERS_VISTA* ProcessParameters;
+	PPEB_LDR_DATA Ldr;
+	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
 	PVOID SubSystemData;
 	PVOID ProcessHeap;
-	CRITICAL_SECTION* FastPebLock;
+	PRTL_CRITICAL_SECTION FastPebLock;
 	PVOID AtlThunkSListPtr;
-	HKEY IFEOKey;
-#include <pshpack1.h>
+	PVOID IFEOKey;
 	union
 	{
 		ULONG CrossProcessFlags;
@@ -549,88 +533,109 @@ typedef struct _PEB_VISTA_7 {
 			ULONG ProcessInitializing : 1;
 			ULONG ProcessUsingVEH : 1;
 			ULONG ProcessUsingVCH : 1;
-			ULONG ProcessUsingFTH : 1; // 7 Only
-			ULONG ReservedBits0 : 0x1b;
+			ULONG ProcessUsingFTH : 1;
+			ULONG ReservedBits0 : 27;
 		};
 	};
-#include <poppack.h>
-	PVOID KernelCallbackTable;
-	PVOID UserSharedInfoPtr;
+	union
+	{
+		PVOID KernelCallbackTable;
+		PVOID UserSharedInfoPtr;
+	};
 	ULONG SystemReserved[1];
 	ULONG AtlThunkSListPtr32;
 	PVOID ApiSetMap;
 	ULONG TlsExpansionCounter;
 	PVOID TlsBitmap;
-	ULONG TlsBitmapBits[0x2];
+	ULONG TlsBitmapBits[2];
 	PVOID ReadOnlySharedMemoryBase;
 	PVOID HotpatchInformation;
-	PVOID* ReadOnlyStaticServerData;
+	PVOID *ReadOnlyStaticServerData;
 	PVOID AnsiCodePageData;
 	PVOID OemCodePageData;
 	PVOID UnicodeCaseTableData;
+
 	ULONG NumberOfProcessors;
 	ULONG NtGlobalFlag;
+
 	LARGE_INTEGER CriticalSectionTimeout;
-	ULONG_PTR HeapSegmentReserve;
-	ULONG_PTR HeapSegmentCommit;
-	ULONG_PTR HeapDeCommitTotalFreeThreshold;
-	ULONG_PTR HeapDeCommitFreeBlockThreshold;
+	SIZE_T HeapSegmentReserve;
+	SIZE_T HeapSegmentCommit;
+	SIZE_T HeapDeCommitTotalFreeThreshold;
+	SIZE_T HeapDeCommitFreeBlockThreshold;
+
 	ULONG NumberOfHeaps;
 	ULONG MaximumNumberOfHeaps;
-	PVOID* *ProcessHeaps;
+	PVOID *ProcessHeaps;
+
 	PVOID GdiSharedHandleTable;
 	PVOID ProcessStarterHelper;
-	PVOID GdiDCAttributeList;
-	PCRITICAL_SECTION LoaderLock;
+	ULONG GdiDCAttributeList;
+
+	PRTL_CRITICAL_SECTION LoaderLock;
+
 	ULONG OSMajorVersion;
 	ULONG OSMinorVersion;
 	USHORT OSBuildNumber;
-	USHORT OSPlatformId;
-	ULONG ImageSubSystem;
-	ULONG ImageSubSystemMajorVersion;
-	ULONG ImageSubSystemMinorVersion;
-	KAFFINITY ActiveProcessAffinityMask;
-#ifdef _WIN64
-	ULONG GdiHandleBuffer[0x3c];
+	USHORT OSCSDVersion;
+	ULONG OSPlatformId;
+	ULONG ImageSubsystem;
+	ULONG ImageSubsystemMajorVersion;
+	ULONG ImageSubsystemMinorVersion;
+	ULONG_PTR ActiveProcessAffinityMask;
+#ifdef _AMD64_
+	ULONG GdiHandleBuffer[60];
 #else
-	ULONG GdiHandleBuffer[0x22];
+	ULONG GdiHandleBuffer[34];
 #endif
 	PVOID PostProcessInitRoutine;
+
 	PVOID TlsExpansionBitmap;
-	ULONG TlsExpansionBitmapBits[0x20];
+	ULONG TlsExpansionBitmapBits[32];
+
 	ULONG SessionId;
+
 	ULARGE_INTEGER AppCompatFlags;
 	ULARGE_INTEGER AppCompatFlagsUser;
 	PVOID pShimData;
 	PVOID AppCompatInfo;
+
 	UNICODE_STRING CSDVersion;
-	const PVOID ActivationContextData;
+
+	PVOID ActivationContextData;
 	PVOID ProcessAssemblyStorageMap;
-	const PVOID SystemDefaultActivationContextData;
+	PVOID SystemDefaultActivationContextData;
 	PVOID SystemAssemblyStorageMap;
-	ULONG_PTR MinimumStackCommit;
-	PVOID FlsCallback;
+
+	SIZE_T MinimumStackCommit;
+
+	PVOID *FlsCallback;
 	LIST_ENTRY FlsListHead;
 	PVOID FlsBitmap;
-	ULONG FlsBitmapBits[0x4];
+	ULONG FlsBitmapBits[FLS_MAXIMUM_AVAILABLE / (sizeof(ULONG) * 8)];
 	ULONG FlsHighIndex;
+
 	PVOID WerRegistrationData;
-	PVOID WerShipAssertPtr; // Last on Vista
+	PVOID WerShipAssertPtr;
 	PVOID pContextData;
 	PVOID pImageHeaderHash;
-#include <pshpack1.h>
 	union
 	{
 		ULONG TracingFlags;
 		struct
 		{
-			ULONG HeapTracingEnable : 1;
+			ULONG HeapTracingEnabled : 1;
 			ULONG CritSecTracingEnabled : 1;
-			ULONG SpareTracingBits : 0x1e;
+			ULONG LibLoaderTracingEnabled : 1;
+			ULONG SpareTracingBits : 29;
 		};
 	};
-#include <poppack.h>
-} PEB_VISTA_7, *PPEB_VISTA_7;
+	ULONGLONG CsrServerReadOnlySharedMemoryBase;
+	PVOID TppWorkerpListLock;
+	LIST_ENTRY TppWorkerpList;
+	PVOID WaitOnAddressHashTable[128];
+} PEB, *PPEB;
+
 
 typedef enum _LPC_TYPE {
 	LPC_NEW_MESSAGE, // A new message
@@ -1286,14 +1291,6 @@ struct SYSTEM_BOOT_ENVIRONMENT_INFORMATION
 	DWORD Unknow[10];
 };
 
-typedef struct _RTL_USER_PROCESS_PARAMETERS {
-	BYTE           Reserved1[16];
-	PVOID          Reserved2[10];
-	UNICODE_STRING ImagePathName;
-	UNICODE_STRING CommandLine;
-} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
-
-
 
 typedef struct _RTL_BUFFER {
 	PUCHAR    Buffer;
@@ -1897,6 +1894,10 @@ extern "C"
 			);
 #endif
 
+	NTSYSAPI VOID NTAPI  RtlRunDecodeUnicodeString(IN UCHAR Hash, IN OUT PUNICODE_STRING String);
+
+	NTSYSAPI VOID NTAPI  RtlRunEncodeUnicodeString(IN OUT PUCHAR Hash, IN OUT PUNICODE_STRING String);
+
 	NTSYSAPI
 		ULONG
 		NTAPI
@@ -2490,7 +2491,7 @@ extern "C"
 
 	typedef struct _PROCESS_BASIC_INFORMATION {
 		NTSTATUS ExitStatus;
-		PPEB_VISTA_7 PebBaseAddress;
+		PPEB PebBaseAddress;
 		ULONG_PTR AffinityMask;
 		KPRIORITY BasePriority;
 		ULONG_PTR UniqueProcessId;
@@ -2892,458 +2893,160 @@ extern "C"
 		ULONG Flags;
 		struct _TEB_ACTIVE_FRAME* Previous;
 		TEB_ACTIVE_FRAME_CONTEXT* Context;
-	} TEB_ACTIVE_FRAME;
+	} TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
 
-	// XP SP3 layout
-	typedef struct _TEB_XP
+	typedef struct _TEB
 	{
-		NT_TIB					NtTib;
-		PVOID                   EnvironmentPointer;
-		CLIENT_ID               Cid;
-		PVOID                   ActiveRpcInfo;
-		PVOID                   ThreadLocalStoragePointer;
-		PPEB_XP                 Peb;
-		ULONG                   LastErrorValue;
-		ULONG                   CountOfOwnedCriticalSections;
-		PVOID                   CsrClientThread;
-		PVOID                   Win32ThreadInfo;
-		ULONG                   User32Reserved[0x1a];
-		ULONG                   UserReserved[0x5];
-		PVOID                   WOW32Reserved;
-		ULONG                   CurrentLocale;
-		ULONG                   FpSoftwareStatusRegister;
-		PVOID                   SystemReserved1[0x36];
-		ULONG                   ExceptionCode;
-		ACTIVATION_CONTEXT_STACK ActivationContextStack;
-		BYTE                    SpareBytes1[0x18];
-		GDI_TEB_BATCH			GdiTebBatch;
-		CLIENT_ID               RealClientId;
-		HANDLE					GdiCachedProcessHandle;
-		ULONG					GdiClientPID;
-		ULONG					GdiClientTID;
-		PVOID                   GdiThreadLocaleInfo;
-		UINT_PTR                Win32ClientInfo[0x3e];
-		PVOID                   GlDispatchTable[0xe9];
-		UINT_PTR                GlReserved1[0x1d];
-		PVOID                   GlReserved2;
-		PVOID                   GlSectionInfo;
-		PVOID                   GlSection;
-		PVOID                   GlTable;
-		PVOID                   GlCurrentRC;
-		PVOID                   GlContext;
-		NTSTATUS                LastStatusValue;
-		UNICODE_STRING          StaticUnicodeString;
-		WCHAR                   StaticUnicodeBuffer[0x105];
-		PVOID                   DeallocationStack;
-		PVOID                   TlsSlots[0x40];
-		LIST_ENTRY              TlsLinks;
-		PVOID                   Vdm;
-		PVOID                   ReservedForNtRpc;
-		PVOID                   DbgSsReserved[0x2];
-		ULONG                   HardErrorsAreDisabled;
-		PVOID                   Instrumentation[0x10];
-		PVOID                   WinSockData;
-		ULONG                   GdiBatchCount;
-		BOOLEAN                 InDbgPrint;
-		BOOLEAN                 FreeStackOnTermination;
-		BOOLEAN                 HasFiberData;
-		BOOLEAN                 IdealProcessor;
-		ULONG					Spare3;
-		PVOID                   ReservedForPerf;
-		PVOID                   ReservedForOle;
-		ULONG                   WaitingOnLoaderLock;
-		Wx86ThreadState			Wx86Thread;
-		PVOID*                  TlsExpansionSlots;
-		ULONG                   ImpersonationLocale;
-		ULONG                   IsImpersonating;
-		PVOID                   NlsCache;
-		PVOID                   pShimData;
-		ULONG                   HeapVirtualAffinity;
-		HANDLE                  CurrentTransactionHandle;
-		TEB_ACTIVE_FRAME*       ActiveFrame;
-		BOOLEAN                 SafeThunkCall;
-		BOOLEAN					BooleanSpare[3];
-	} TEB_XP, *PTEB_XP;
+		NT_TIB NtTib;
 
-	// Win Vista SP0 layout
-	typedef struct _TEB_VISTA
-	{
-		NT_TIB					NtTib;
-		PVOID                   EnvironmentPointer;
-		CLIENT_ID               Cid;
-		PVOID                   ActiveRpcInfo;
-		PVOID                   ThreadLocalStoragePointer;
-		PPEB_VISTA_7            Peb;
-		ULONG                   LastErrorValue;
-		ULONG                   CountOfOwnedCriticalSections;
-		PVOID                   CsrClientThread;
-		PVOID                   Win32ThreadInfo;
-		ULONG                   User32Reserved[0x1a];
-		ULONG                   UserReserved[0x5];
-		PVOID                   WOW32Reserved;
-		ULONG                   CurrentLocale;
-		ULONG                   FpSoftwareStatusRegister;
-		PVOID                   SystemReserved1[0x36];
-		ULONG                   ExceptionCode;
-		ACTIVATION_CONTEXT_STACK* ActivationContextStack;
+		PVOID EnvironmentPointer;
+		CLIENT_ID ClientId;
+		PVOID ActiveRpcHandle;
+		PVOID ThreadLocalStoragePointer;
+		PPEB ProcessEnvironmentBlock;
+
+		ULONG LastErrorValue;
+		ULONG CountOfOwnedCriticalSections;
+		PVOID CsrClientThread;
+		PVOID Win32ThreadInfo;
+		ULONG User32Reserved[26];
+		ULONG UserReserved[5];
+		PVOID WOW32Reserved;
+		LCID CurrentLocale;
+		ULONG FpSoftwareStatusRegister;
+		PVOID ReservedForDebuggerInstrumentation[16];
+		PVOID SystemReserved1[37];
+		UCHAR WorkingOnBehalfTicket[8];
+		NTSTATUS ExceptionCode;
+
+		PVOID ActivationContextStackPointer;
+		ULONG_PTR InstrumentationCallbackSp;
+		ULONG_PTR InstrumentationCallbackPreviousPc;
+		ULONG_PTR InstrumentationCallbackPreviousSp;
+		ULONG TxFsContext;
+
+		BOOLEAN InstrumentationCallbackDisabled;
+		GDI_TEB_BATCH GdiTebBatch;
+		CLIENT_ID RealClientId;
+		HANDLE GdiCachedProcessHandle;
+		ULONG GdiClientPID;
+		ULONG GdiClientTID;
+		PVOID GdiThreadLocalInfo;
+		ULONG_PTR Win32ClientInfo[62];
+		PVOID glDispatchTable[233];
+		ULONG_PTR glReserved1[29];
+		PVOID glReserved2;
+		PVOID glSectionInfo;
+		PVOID glSection;
+		PVOID glTable;
+		PVOID glCurrentRC;
+		PVOID glContext;
+
+		NTSTATUS LastStatusValue;
+		UNICODE_STRING StaticUnicodeString;
+		WCHAR StaticUnicodeBuffer[261];
+
+		PVOID DeallocationStack;
+		PVOID TlsSlots[64];
+		LIST_ENTRY TlsLinks;
+
+		PVOID Vdm;
+		PVOID ReservedForNtRpc;
+		PVOID DbgSsReserved[2];
+
+		ULONG HardErrorMode;
 #ifdef _WIN64
-		BYTE                    SpareBytes1[0x18];
+		PVOID Instrumentation[11];
 #else
-		BYTE                    SpareBytes1[0x24];
+		PVOID Instrumentation[9];
 #endif
-		ULONG					TxFsContext;
-		GDI_TEB_BATCH			GdiTebBatch;
-		CLIENT_ID               RealClientId;
-		HANDLE					GdiCachedProcessHandle;
-		ULONG					GdiClientPID;
-		ULONG					GdiClientTID;
-		PVOID                   GdiThreadLocaleInfo;
-		UINT_PTR                Win32ClientInfo[0x3e];
-		PVOID                   GlDispatchTable[0xe9];
-		UINT_PTR                GlReserved1[0x1d];
-		PVOID                   GlReserved2;
-		PVOID                   GlSectionInfo;
-		PVOID                   GlSection;
-		PVOID                   GlTable;
-		PVOID                   GlCurrentRC;
-		PVOID                   GlContext;
-		NTSTATUS                LastStatusValue;
-		UNICODE_STRING          StaticUnicodeString;
-		WCHAR                   StaticUnicodeBuffer[0x105];
-		PVOID                   DeallocationStack;
-		PVOID                   TlsSlots[0x40];
-		LIST_ENTRY              TlsLinks;
-		PVOID                   Vdm;
-		PVOID                   ReservedForNtRpc;
-		PVOID                   DbgSsReserved[0x2];
-		ULONG                   HardErrorsAreDisabled;
-#ifdef _WIN64
-		PVOID                   Instrumentation[0xB];
-#else
-		PVOID                   Instrumentation[0x9];
-#endif
-		GUID                    ActivityId;
-		PVOID                   EtwLocalData;
-		PVOID                   EtwTraceData;
-		PVOID					WinSockData;
-		ULONG                   GdiBatchCount;
-		BOOLEAN                 SpareBool0;
-		BOOLEAN                 SpareBool1;
-		BOOLEAN                 SpareBool2;
-		BOOLEAN                 IdealProcessor;
-		ULONG                   GuaranteedStackBytes;
-		PVOID                   ReservedForPerf;
-		PVOID                   ReservedForOle;
-		ULONG                   WaitingOnLoaderLock;
-		PVOID                   SavedPriorityState;
-		ULONG_PTR				SoftPatchPtr1;
-		PVOID					ThreadPoolData;
-		PVOID*                  TlsExpansionSlots;
-		ULONG                   ImpersonationLocale;
-		ULONG                   IsImpersonating;
-		PVOID                   NlsCache;
-		PVOID                   pShimData;
-		ULONG                   HeapVirtualAffinity;
-		HANDLE                  CurrentTransactionHandle;
-		TEB_ACTIVE_FRAME*       ActiveFrame;
-		PVOID					FlsData;
-		PVOID					PreferredLanguages;
-		PVOID					UserPrefLanguages;
-		PVOID					MergedPrefLanguages;
-		ULONG					MuiImpersonation;
-#include <pshpack1.h>
+		GUID ActivityId;
+
+		PVOID SubProcessTag;
+		PVOID PerflibData;
+		PVOID EtwTraceData;
+		PVOID WinSockData;
+		ULONG GdiBatchCount;
+
 		union
 		{
-			volatile USHORT		CrossTebFlags;
-			USHORT				SpareCrossTebBits : 0x10;
-		};
-		union
-		{
-			USHORT				SameTebFlags;
+			PROCESSOR_NUMBER CurrentIdealProcessor;
+			ULONG IdealProcessorValue;
 			struct
 			{
-				USHORT          DbgSafeThunkCall : 1;
-				USHORT          DbgInDbgPrint : 1;
-				USHORT          DbgHasFiberData : 1;
-				USHORT          DbgSkipThreadAttach : 1;
-				USHORT          DbgWerInShipAssertCode : 1;
-				USHORT          DbgRanProcessInit : 1;
-				USHORT          DbgClonedThread : 1;
-				USHORT          DbgSuppressDebugMsg : 1;
-				USHORT          SpareSameTebBits : 8;
+				UCHAR ReservedPad0;
+				UCHAR ReservedPad1;
+				UCHAR ReservedPad2;
+				UCHAR IdealProcessor;
 			};
 		};
-#include <poppack.h>
-		PVOID					TxnScopeEnterCallback;
-		PVOID					TxnScopeExitCallback;
-		PVOID					TxnScopeContext;
-		ULONG					LockCount;
-		ULONG					ProcessRundown;
-		UINT64					LastSwitchTime;
-		UINT64					TotalSwitchOutTime;
-		LARGE_INTEGER			WaitReasonBitmap;
-	} TEB_VISTA, *PTEB_VISTA;
 
-	// Win Vista SP1 & SP2 layout
-	typedef struct _TEB_VISTA_SP
-	{
-		NT_TIB					NtTib;
-		PVOID                   EnvironmentPointer;
-		CLIENT_ID               Cid;
-		PVOID                   ActiveRpcInfo;
-		PVOID                   ThreadLocalStoragePointer;
-		PPEB_VISTA_7            Peb;
-		ULONG                   LastErrorValue;
-		ULONG                   CountOfOwnedCriticalSections;
-		PVOID                   CsrClientThread;
-		PVOID                   Win32ThreadInfo;
-		ULONG                   User32Reserved[0x1a];
-		ULONG                   UserReserved[0x5];
-		PVOID                   WOW32Reserved;
-		ULONG                   CurrentLocale;
-		ULONG                   FpSoftwareStatusRegister;
-		PVOID                   SystemReserved1[0x36];
-		ULONG                   ExceptionCode;
-		ACTIVATION_CONTEXT_STACK* ActivationContextStack;
+		ULONG GuaranteedStackBytes;
+		PVOID ReservedForPerf;
+		PVOID ReservedForOle;
+		ULONG WaitingOnLoaderLock;
+		PVOID SavedPriorityState;
+		ULONG_PTR ReservedForCodeCoverage;
+		PVOID ThreadPoolData;
+		PVOID *TlsExpansionSlots;
 #ifdef _WIN64
-		BYTE                    SpareBytes1[0x18];
-#else
-		BYTE                    SpareBytes1[0x24];
+		PVOID DeallocationBStore;
+		PVOID BStoreLimit;
 #endif
-		ULONG					TxFsContext;
-		GDI_TEB_BATCH			GdiTebBatch;
-		CLIENT_ID               RealClientId;
-		HANDLE					GdiCachedProcessHandle;
-		ULONG					GdiClientPID;
-		ULONG					GdiClientTID;
-		PVOID                   GdiThreadLocaleInfo;
-		UINT_PTR                Win32ClientInfo[0x3e];
-		PVOID                   GlDispatchTable[0xe9];
-		UINT_PTR                GlReserved1[0x1d];
-		PVOID                   GlReserved2;
-		PVOID                   GlSectionInfo;
-		PVOID                   GlSection;
-		PVOID                   GlTable;
-		PVOID                   GlCurrentRC;
-		PVOID                   GlContext;
-		NTSTATUS                LastStatusValue;
-		UNICODE_STRING          StaticUnicodeString;
-		WCHAR                   StaticUnicodeBuffer[0x105];
-		PVOID                   DeallocationStack;
-		PVOID                   TlsSlots[0x40];
-		LIST_ENTRY              TlsLinks;
-		PVOID                   Vdm;
-		PVOID                   ReservedForNtRpc;
-		PVOID                   DbgSsReserved[0x2];
-		ULONG                   HardErrorsAreDisabled;
-#ifdef _WIN64
-		PVOID                   Instrumentation[0xB];
-#else
-		PVOID                   Instrumentation[0x9];
-#endif
-		GUID                    ActivityId;
-		PVOID                   EtwLocalData;
-		PVOID                   EtwTraceData;
-		PVOID					WinSockData;
-		union
-		{
-			ULONG               GdiBatchCount;
-			_TEB_VISTA_SP*		pTeb64;
-		};
-		BOOLEAN                 SpareBool0;
-		BOOLEAN                 SpareBool1;
-		BOOLEAN                 SpareBool2;
-		BOOLEAN                 IdealProcessor;
-		ULONG                   GuaranteedStackBytes;
-		PVOID                   ReservedForPerf;
-		PVOID                   ReservedForOle;
-		ULONG                   WaitingOnLoaderLock;
-		PVOID                   SavedPriorityState;
-		ULONG_PTR				SoftPatchPtr1;
-		PVOID					ThreadPoolData;
-		PVOID*                  TlsExpansionSlots;
-		ULONG                   ImpersonationLocale;
-		ULONG                   IsImpersonating;
-		PVOID                   NlsCache;
-		PVOID                   pShimData;
-		ULONG                   HeapVirtualAffinity;
-		HANDLE                  CurrentTransactionHandle;
-		TEB_ACTIVE_FRAME*       ActiveFrame;
-		PVOID					FlsData;
-		PVOID					PreferredLanguages;
-		PVOID					UserPrefLanguages;
-		PVOID					MergedPrefLanguages;
-		ULONG					MuiImpersonation;
-#include <pshpack1.h>
-		union
-		{
-			volatile USHORT		CrossTebFlags;
-			USHORT				SpareCrossTebBits : 0x10;
-		};
-		union
-		{
-			USHORT				SameTebFlags;
-			struct
-			{
-				USHORT          DbgSafeThunkCall : 1;
-				USHORT          DbgInDbgPrint : 1;
-				USHORT          DbgHasFiberData : 1;
-				USHORT          DbgSkipThreadAttach : 1;
-				USHORT          DbgWerInShipAssertCode : 1;
-				USHORT          DbgRanProcessInit : 1;
-				USHORT          DbgClonedThread : 1;
-				USHORT          DbgSuppressDebugMsg : 1;
-				USHORT          RtlDisableUserStackWalk : 1;
-				USHORT          DbgRtlExceptionAttached : 1;
-				USHORT          SpareSameTebBits : 6;
-			};
-		};
-#include <poppack.h>
-		PVOID					TxnScopeEnterCallback;
-		PVOID					TxnScopeExitCallback;
-		PVOID					TxnScopeContext;
-		ULONG					LockCount;
-		ULONG					ProcessRundown;
-		UINT64					LastSwitchTime;
-		UINT64					TotalSwitchOutTime;
-		LARGE_INTEGER			WaitReasonBitmap;
-	} TEB_VISTA_SP, *PTEB_VISTA_SP;
+		ULONG MuiGeneration;
+		ULONG IsImpersonating;
+		PVOID NlsCache;
+		PVOID pShimData;
+		USHORT HeapVirtualAffinity;
+		USHORT LowFragHeapDataSlot;
+		HANDLE CurrentTransactionHandle;
+		PTEB_ACTIVE_FRAME ActiveFrame;
+		PVOID FlsData;
 
-	// Win7, 7 SP1 layout
-	typedef struct _TEB_7
-	{
-		NT_TIB					NtTib;
-		PVOID                   EnvironmentPointer;
-		CLIENT_ID               Cid;
-		PVOID                   ActiveRpcInfo;
-		PVOID                   ThreadLocalStoragePointer;
-		PPEB_VISTA_7            Peb;
-		ULONG                   LastErrorValue;
-		ULONG                   CountOfOwnedCriticalSections;
-		PVOID                   CsrClientThread;
-		PVOID                   Win32ThreadInfo;
-		ULONG                   User32Reserved[0x1a];
-		ULONG                   UserReserved[0x5];
-		PVOID                   WOW32Reserved;
-		ULONG                   CurrentLocale;
-		ULONG                   FpSoftwareStatusRegister;
-		PVOID                   SystemReserved1[0x36];
-		ULONG                   ExceptionCode;
-		ACTIVATION_CONTEXT_STACK* ActivationContextStack;
-#ifdef _WIN64
-		BYTE                    SpareBytes1[0x18];
-#else
-		BYTE                    SpareBytes1[0x24];
-#endif
-		ULONG					TxFsContext;
-		GDI_TEB_BATCH			GdiTebBatch;
-		CLIENT_ID               RealClientId;
-		HANDLE					GdiCachedProcessHandle;
-		ULONG					GdiClientPID;
-		ULONG					GdiClientTID;
-		PVOID                   GdiThreadLocaleInfo;
-		UINT_PTR                Win32ClientInfo[0x3e];
-		PVOID                   GlDispatchTable[0xe9];
-		UINT_PTR                GlReserved1[0x1d];
-		PVOID                   GlReserved2;
-		PVOID                   GlSectionInfo;
-		PVOID                   GlSection;
-		PVOID                   GlTable;
-		PVOID                   GlCurrentRC;
-		PVOID                   GlContext;
-		NTSTATUS                LastStatusValue;
-		UNICODE_STRING          StaticUnicodeString;
-		WCHAR                   StaticUnicodeBuffer[0x105];
-		PVOID                   DeallocationStack;
-		PVOID                   TlsSlots[0x40];
-		LIST_ENTRY              TlsLinks;
-		PVOID                   Vdm;
-		PVOID                   ReservedForNtRpc;
-		PVOID                   DbgSsReserved[0x2];
-		ULONG                   HardErrorsAreDisabled;
-#ifdef _WIN64
-		PVOID                   Instrumentation[0xB];
-#else
-		PVOID                   Instrumentation[0x9];
-#endif
-		GUID                    ActivityId;
-		PVOID                   EtwLocalData;
-		PVOID                   EtwTraceData;
-		PVOID					WinSockData;
+		PVOID PreferredLanguages;
+		PVOID UserPrefLanguages;
+		PVOID MergedPrefLanguages;
+		ULONG MuiImpersonation;
+
 		union
 		{
-			ULONG               GdiBatchCount;
-			_TEB_7*				pTeb64;
+			USHORT CrossTebFlags;
+			USHORT SpareCrossTebBits : 16;
 		};
-#include <pshpack1.h>
 		union
 		{
-			PROCESSOR_NUMBER        CurrentIdealProcessor;
-			ULONG                   IdealProcessorValue;
+			USHORT SameTebFlags;
 			struct
 			{
-				BOOLEAN                 ReservedPad0;
-				BOOLEAN                 ReservedPad1;
-				BOOLEAN                 ReservedPad2;
-				BOOLEAN                 IdealProcessor;
+				USHORT SafeThunkCall : 1;
+				USHORT InDebugPrint : 1;
+				USHORT HasFiberData : 1;
+				USHORT SkipThreadAttach : 1;
+				USHORT WerInShipAssertCode : 1;
+				USHORT RanProcessInit : 1;
+				USHORT ClonedThread : 1;
+				USHORT SuppressDebugMsg : 1;
+				USHORT DisableUserStackWalk : 1;
+				USHORT RtlExceptionAttached : 1;
+				USHORT InitialThread : 1;
+				USHORT SessionAware : 1;
+				USHORT LoadOwner : 1;
+				USHORT LoaderWorker : 1;
+				USHORT SpareSameTebBits : 2;
 			};
 		};
-#include <poppack.h>
-		ULONG                   GuaranteedStackBytes;
-		PVOID                   ReservedForPerf;
-		PVOID                   ReservedForOle;
-		ULONG                   WaitingOnLoaderLock;
-		PVOID                   SavedPriorityState;
-		ULONG_PTR				SoftPatchPtr1;
-		PVOID					ThreadPoolData;
-		PVOID*                  TlsExpansionSlots;
-		ULONG                   MuiGeneration;
-		ULONG                   IsImpersonating;
-		PVOID                   NlsCache;
-		PVOID                   pShimData;
-		ULONG                   HeapVirtualAffinity;
-		HANDLE                  CurrentTransactionHandle;
-		TEB_ACTIVE_FRAME*       ActiveFrame;
-		PVOID					FlsData;
-		PVOID					PreferredLanguages;
-		PVOID					UserPrefLanguages;
-		PVOID					MergedPrefLanguages;
-		ULONG					MuiImpersonation;
-#include <pshpack1.h>
-		union
-		{
-			volatile USHORT		CrossTebFlags;
-			USHORT				SpareCrossTebBits : 0x10;
-		};
-		union
-		{
-			USHORT				SameTebFlags;
-			struct
-			{
-				USHORT          SafeThunkCall : 1;
-				USHORT          InDbgPrint : 1;
-				USHORT          HasFiberData : 1;
-				USHORT          SkipThreadAttach : 1;
-				USHORT          WerInShipAssertCode : 1;
-				USHORT          RanProcessInit : 1;
-				USHORT          ClonedThread : 1;
-				USHORT          SuppressDebugMsg : 1;
-				USHORT          DisableUserStackWalk : 1;
-				USHORT          RtlExceptionAttached : 1;
-				USHORT          InitialThread : 1;
-				USHORT          SpareSameTebBits : 5;
-			};
-		};
-#include <poppack.h>
-		BOOLEAN                 FreeStackOnTermination;
-		ULONG                   ImpersonationLocale;
-		PVOID					TxnScopeEnterCallback;
-		PVOID					TxnScopeExitCallback;
-		PVOID					TxnScopeContext;
-		ULONG					LockCount;
-		ULONG					SpareUlong0;
-		PVOID					ResourceRetValue;
-	} TEB_7, *PTEB_7;
+
+		PVOID TxnScopeEnterCallback;
+		PVOID TxnScopeExitCallback;
+		PVOID TxnScopeContext;
+		ULONG LockCount;
+		LONG WowTebOffset;
+		PVOID ResourceRetValue;
+		PVOID ReservedForWdf;
+		ULONGLONG ReservedForCrt;
+		GUID EffectiveContainerId;
+	} TEB, *PTEB;
+
 
 	__if_not_exists(NtCurrentTeb)
 	{
@@ -3360,7 +3063,7 @@ extern "C"
 
 #else
 
-	PPEB_VISTA_7 NTAPI RtlGetCurrentPeb(void);
+	PPEB NTAPI RtlGetCurrentPeb(void);
 
 	NTSYSAPI
 		NTSTATUS

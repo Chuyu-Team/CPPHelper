@@ -2897,3 +2897,19 @@ int __fastcall StrLen(_In_opt_z_ LPCWSTR psz)
 	// returns length in wchar_ts
 	return (psz != NULL) ? (int)wcslen(psz) : 0;
 }
+
+BOOL IsCompatibilityMode()
+{
+	OSVERSIONINFOW VersionInformation = { sizeof(VersionInformation) };
+
+	if (!GetVersionExW(&VersionInformation))
+	{
+		return -1;
+	}
+
+	auto pPeb = ((TEB*)NtCurrentTeb())->ProcessEnvironmentBlock;
+
+	return pPeb->OSMajorVersion != VersionInformation.dwMajorVersion
+		|| pPeb->OSMinorVersion != VersionInformation.dwMinorVersion
+		|| pPeb->OSBuildNumber != VersionInformation.dwBuildNumber;
+}

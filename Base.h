@@ -168,3 +168,5 @@ CStringA HexString2Binary(LPCSTR HexString);
 
 HRESULT HresultFromBool();
 
+//检测是否是兼容模式
+BOOL IsCompatibilityMode();
