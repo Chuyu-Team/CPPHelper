@@ -2913,3 +2913,17 @@ BOOL IsCompatibilityMode()
 		|| pPeb->OSMinorVersion != VersionInformation.dwMinorVersion
 		|| pPeb->OSBuildNumber != VersionInformation.dwBuildNumber;
 }
+
+DWORD DirectGetOsMinVersion()
+{
+	auto pPeb = ((TEB*)NtCurrentTeb())->ProcessEnvironmentBlock;
+
+	return MakeMiniVersion(pPeb->OSMajorVersion, pPeb->OSMinorVersion);
+}
+
+UINT64 DirectGetOsVersion()
+{
+	auto pPeb = ((TEB*)NtCurrentTeb())->ProcessEnvironmentBlock;
+
+	return MakeVersion(pPeb->OSMajorVersion, pPeb->OSMinorVersion, pPeb->OSBuildNumber, 0);
+}

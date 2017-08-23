@@ -20,9 +20,9 @@
 
 
 //生成版本号
-#define MakeVersion(v1,v2,v3,v4) (((UINT64)(v4))|((UINT64)v3<<16)|((UINT64)v2<<32)|((UINT64)v1<<48))
+#define MakeVersion(v1,v2,v3,v4) (UINT64)(((UINT64)(v4))|((UINT64)v3<<16)|((UINT64)v2<<32)|((UINT64)v1<<48))
 
-#define MakeMiniVersion(v1,v2) (v2|(v1<<16))
+#define MakeMiniVersion(v1,v2) (DWORD)(v2|(v1<<16))
 
 #define __StrA(x) #x
 #define __StrW(x) _T(__StrA(x))
@@ -170,3 +170,9 @@ HRESULT HresultFromBool();
 
 //检测是否是兼容模式
 BOOL IsCompatibilityMode();
+
+//获取2位小版本号，比如6.1
+DWORD DirectGetOsMinVersion();
+
+//获取3位版本号，最后一位必定为0，比如6.1.7601.0
+UINT64 DirectGetOsVersion();
