@@ -4,6 +4,7 @@
 #include "StringHelper.h"
 #include "handle.h"
 #pragma comment (lib,"Version.lib")
+#pragma comment (lib,"KtmW32.lib")
 
 
 bool __fastcall IsDots(LPCWSTR FileName, DWORD cbFileName)
@@ -644,23 +645,51 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 
 				////////////////////////////////////////
 				//先检查文件是否为同一个文件
-				if (auto thr = GetFileId(NewFile, NULL, &IdNew))
+				if (auto Status = GetFileId(NewFile, NULL, &IdNew))
 				{
-					hr = thr;
+					hr = RtlNtStatusToDosError(Status);
 					continue;
 				}
 
-				if (auto thr = GetFileId(OldFile, NULL, &IdOld))
+				if (auto Status = GetFileId(OldFile, NULL, &IdOld))
 				{
-					hr = thr;
+					hr = RtlNtStatusToDosError(Status);
 					continue;
 				}
 
 				if (IdNew.IndexNumber.QuadPart != IdOld.IndexNumber.QuadPart)
 				{
-					if (!MoveFileEx(NewFile, OldFile, MOVEFILE_CREATE_HARDLINK | MOVEFILE_REPLACE_EXISTING))
+					if (DirectGetOsMinVersion() >= MakeMiniVersion(6, 1))
 					{
-						hr = GetLastError();
+						if (!MoveFileEx(NewFile, OldFile, MOVEFILE_CREATE_HARDLINK | MOVEFILE_REPLACE_EXISTING))
+						{
+							hr = GetLastError();
+						}
+					}
+					else
+					{
+						//Vista不支持直接替换，在Host为Vista时则使用事物处理来保证操作原子性
+						auto hTransaction = CreateTransaction(NULL, 0, 0, 0, 0, INFINITE, nullptr);
+						if (hTransaction == INVALID_HANDLE_VALUE)
+						{
+							hr = GetLastError();
+						}
+						else
+						{
+							if (DeleteFileTransactedW(OldFile, hTransaction)==FALSE || CreateHardLinkTransactedW(OldFile, NewFile,nullptr, hTransaction)==FALSE)
+							{
+								hr = GetLastError();
+							}
+							else
+							{
+								if (!CommitTransactionAsync(hTransaction))
+								{
+									hr = GetLastError();
+								}
+							}
+							CloseHandle(hTransaction);
+						}
+
 					}
 				}
 			}
