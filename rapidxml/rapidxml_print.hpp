@@ -28,8 +28,8 @@ namespace rapidxml
         // Internal character operations
     
         // Copy characters from given range to given output iterator
-		template<class Ch>
-		inline void copy_chars(const Ch *Str, DWORD cStr, CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out)
+		template<class Ch, class CStringT>
+		inline void copy_chars(const Ch *Str, DWORD cStr, CStringT& out)
 		{
 			DWORD OldLength= out.GetLength();
 
@@ -46,8 +46,8 @@ namespace rapidxml
         
         // Copy characters from given range to given output iterator and expand
         // characters into references (&lt; &gt; &apos; &quot; &amp;)
-        template<class Ch>
-		inline void copy_and_expand_chars(const Ch *begin, const Ch *end, Ch noexpand, CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out)
+		template<class Ch, class CStringT>
+		inline void copy_and_expand_chars(const Ch *begin, const Ch *end, Ch noexpand, CStringT& out)
         {
             while (begin != end)
             {
@@ -106,8 +106,8 @@ namespace rapidxml
         }
 
         // Fill given output iterator with repetitions of the same character
-        template<class Ch>
-		inline void fill_chars(CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out, int n, Ch ch)
+		template<class Ch, class CStringT>
+		inline void fill_chars(CStringT& out, int n, Ch ch)
         {
 			//加大缓冲区，防止内存抖动
 			out.GetBuffer(out.GetLength() + n);
@@ -130,8 +130,8 @@ namespace rapidxml
         // Internal printing operations
     
         // Print node
-        template<class Ch>
-		inline void print_node(CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             // Print proper node type
             switch (node->type())
@@ -192,8 +192,8 @@ namespace rapidxml
         }
         
         // Print children of the node                               
-        template<class Ch>
-		inline void print_children(CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out, const xml_node<Ch> *node, int flags, int indent)
+        template<class Ch,class CStringT>
+		inline void print_children(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             for (xml_node<Ch> *child = node->first_node(); child; child = child->next_sibling())
                 print_node(out, child, flags, indent);
@@ -201,8 +201,8 @@ namespace rapidxml
         }
 
         // Print attributes of the node
-        template<class Ch>
-		inline void print_attributes(CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out, const xml_node<Ch> *node, int flags)
+		template<class Ch, class CStringT>
+		inline void print_attributes(CStringT& out, const xml_node<Ch> *node, int flags)
         {
             for (xml_attribute<Ch> *attribute = node->first_attribute(); attribute; attribute = attribute->next_attribute())
             {
@@ -246,8 +246,8 @@ namespace rapidxml
         }
 
         // Print data node
-        template<class Ch>
-        inline void print_data_node(CStringT<Ch, StrTraitATL<Ch, ChTraitsCRT<Ch>>>& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_data_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_data);
             if (!(flags & print_no_indenting))
@@ -258,8 +258,8 @@ namespace rapidxml
         }
 
         // Print data node
-        template<class Ch>
-        inline void print_cdata_node(CStringT<Ch,StrTraitATL<Ch,ChTraitsCRT<Ch>>>& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_cdata_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_cdata);
             if (!(flags & print_no_indenting))
@@ -281,8 +281,8 @@ namespace rapidxml
         }
 
         // Print element node
-        template<class Ch>
-        inline void print_element_node(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_element_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_element);
 
@@ -341,8 +341,8 @@ namespace rapidxml
         }
 
         // Print declaration node
-        template<class Ch>
-        inline void print_declaration_node(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_declaration_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             // Print declaration start
             if (!(flags & print_no_indenting))
@@ -365,8 +365,8 @@ namespace rapidxml
         }
 
         // Print comment node
-        template<class Ch>
-        inline void print_comment_node(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_comment_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_comment);
             if (!(flags & print_no_indenting))
@@ -385,8 +385,8 @@ namespace rapidxml
         }
 
         // Print doctype node
-        template<class Ch>
-        inline void print_doctype_node(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_doctype_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_doctype);
             if (!(flags & print_no_indenting))
@@ -408,8 +408,8 @@ namespace rapidxml
         }
 
         // Print pi node
-        template<class Ch>
-        inline void print_pi_node(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& out, const xml_node<Ch> *node, int flags, int indent)
+		template<class Ch, class CStringT>
+		inline void print_pi_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
         {
             assert(node->type() == node_pi);
             if (!(flags & print_no_indenting))
@@ -436,15 +436,23 @@ namespace rapidxml
     //! \param node Node to be printed. Pass xml_document to print entire document.
     //! \param flags Flags controlling how XML is printed.
     //! \return Output iterator pointing to position immediately after last character of printed text.
-    template<class TCHAR>
-    inline CStringT< TCHAR, StrTraitATL< TCHAR, ChTraitsCRT< TCHAR > > > print(const xml_node<TCHAR> &node, int flags = 0)
+	inline CStringA print(const xml_node<char> &node, int flags = 0)
     {
-		CStringT< TCHAR, StrTraitATL< TCHAR, ChTraitsCRT< TCHAR > > > Temp;
+		CStringA Temp;
 
 		internal::print_node(Temp, &node, flags, 0);
 
 		return Temp;
     }
+
+	inline CStringW print(const xml_node<wchar_t> &node, int flags = 0)
+	{
+		CStringW Temp;
+
+		internal::print_node(Temp, &node, flags, 0);
+
+		return Temp;
+	}
 }
 
 #endif
