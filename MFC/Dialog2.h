@@ -1,7 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "stdafx.h"
-#include <BaseFunction.h>
+#include "../BaseFunction.h"
 #include <map>
 
 using namespace std;
