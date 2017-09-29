@@ -2819,7 +2819,7 @@ int unzlocal_getLong(IStream *fin, uLong *pX)
 //
 int unzStringFileNameCompare(const char*fileName1, const char*fileName2, bool iCaseInsensitive)
 {
-	return iCaseInsensitive ? strcmpi(fileName1, fileName2) : strcmp(fileName1, fileName2);
+	return iCaseInsensitive ? _strcmpi(fileName1, fileName2) : strcmp(fileName1, fileName2);
 	//if (iCaseSensitivity == 1) return strcmp(fileName1, fileName2);
 	//else return strcmpcasenosensitive_internal(fileName1, fileName2);
 }
