@@ -446,6 +446,46 @@ namespace rapidxml
             return result;
         }
 
+		char* allocate_string_format(_In_z_ _Printf_format_string_ char const* const _Format, ...)
+		{
+			va_list _ArgList;
+			__crt_va_start(_ArgList, _Format);
+
+			int BufferSize = _vscprintf(_Format, _ArgList);
+
+			//格式是否有误
+			if (BufferSize < 0)
+				return nullptr;
+
+			++BufferSize;
+
+			char* String = allocate_string(nullptr, BufferSize);
+
+			vsprintf_s(String, BufferSize, _Format, _ArgList);
+
+			return String;
+		}
+
+		wchar_t* allocate_string_format(_In_z_ _Printf_format_string_ wchar_t const* const _Format,...)
+		{
+			va_list _ArgList;
+			__crt_va_start(_ArgList, _Format);
+
+			int BufferSize = _vscwprintf(_Format, _ArgList);
+
+			//格式是否有误
+			if (BufferSize < 0)
+				return nullptr;
+
+			++BufferSize;
+
+			wchar_t* String = allocate_string(nullptr, BufferSize);
+
+			vswprintf_s(String, BufferSize, _Format, _ArgList);
+
+			return String;
+		}
+
 
         //! Clones an xml_node and its hierarchy of child nodes and attributes.
         //! Nodes and attributes are allocated from this memory pool.
