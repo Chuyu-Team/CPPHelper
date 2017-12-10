@@ -4441,6 +4441,79 @@ extern "C"
 		);
 #endif
 
+	//UEFI支持相关函数
+
+	NTSYSAPI NTSTATUS NTAPI ZwQueryBootEntryOrder(
+			OUT PULONG Ids,
+			IN OUT PULONG Count
+		);
+
+	// Firmware Boot Options
+	typedef struct _BOOT_OPTIONS
+	{
+		ULONG Version;
+		ULONG Length;
+		ULONG Timeout;
+		ULONG CurrentBootEntryId;
+		ULONG NextBootEntryId;
+		WCHAR HeadlessRedirection[1];
+	} BOOT_OPTIONS, *PBOOT_OPTIONS;
+
+
+	typedef struct _BOOT_ENTRY
+	{
+		//0
+		ULONG NextBootEntry;
+		//4
+
+
+	}BOOT_ENTRY, *PBOOT_ENTRY;
+
+	NTSYSAPI NTSTATUS NTAPI ZwQueryBootOptions(
+			OUT PBOOT_OPTIONS BootOptions,
+			IN OUT PULONG BootOptionsLength
+		);
+
+
+	NTSYSAPI
+		NTSTATUS
+		NTAPI
+		ZwSetBootOptions(
+			IN PBOOT_OPTIONS BootOptions,
+			IN ULONG FieldsToChange
+		);
+
+	NTSYSAPI
+		NTSTATUS
+		NTAPI
+		ZwEnumerateBootEntries(
+			__out_bcount_opt(*BufferLength) PVOID Buffer,
+			__inout PULONG BufferLength
+		);
+
+	NTSYSAPI
+		NTSTATUS
+		NTAPI
+		ZwAddBootEntry(
+			__in PBOOT_ENTRY BootEntry,
+			__out_opt PULONG Id
+		);
+
+
+	NTSYSAPI
+		NTSTATUS
+		NTAPI
+		ZwModifyBootEntry(
+			__in PBOOT_ENTRY BootEntry
+		);
+
+	NTSYSAPI
+		NTSTATUS
+		NTAPI
+		ZwSetBootEntryOrder(
+			__in_ecount(Count) PULONG Ids,
+			__in ULONG Count
+		);
 }
 
 #endif

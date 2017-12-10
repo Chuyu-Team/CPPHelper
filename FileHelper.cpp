@@ -716,96 +716,93 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 	auto Status = NtOpenFile(&hExistingFile, SYNCHRONIZE | FILE_LIST_DIRECTORY| FILE_READ_ATTRIBUTES, &ExistingDirectoryPath, &IoStatusBlock, FILE_SHARE_VALID_FLAGS, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
 
 	if (Status)
-		goto Error2;
-
+		return Status;
 
 	HANDLE hNewFile;
 
 	Status = NtCreateFile(&hNewFile, SYNCHRONIZE | FILE_LIST_DIRECTORY| FILE_WRITE_ATTRIBUTES, &NewDirectoryPath, &IoStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_VALID_FLAGS, FILE_OPEN_IF, FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT, NULL, NULL);
 
-	if (Status)
-		goto Error1;
-
-
-	byte Buffer[sizeof(FILE_FULL_DIR_INFORMATION) + 512];
-
-
-	FILE_FULL_DIR_INFORMATION & FileInfo = *(FILE_FULL_DIR_INFORMATION *)Buffer;
-
-	UNICODE_STRING TempFileName = { 0,0,FileInfo.FileName };
-	NewDirectoryPath.RootDirectory = hNewFile;
-	ExistingDirectoryPath.RootDirectory = hExistingFile;
-	ExistingDirectoryPath.ObjectName = NewDirectoryPath.ObjectName = &TempFileName;
-
-
-	byte FileBuffer[1024];
-
-	FILE_BASIC_INFORMATION BaseInfo;
-	while (ZwQueryDirectoryFile(hExistingFile, NULL, NULL, NULL, &IoStatusBlock, Buffer, sizeof(Buffer), FileFullDirectoryInformation, -1, NULL, 0) == ERROR_SUCCESS)
+	if (Status == 0)
 	{
-		TempFileName.Length = TempFileName.MaximumLength = FileInfo.FileNameLength;
-		if (FileInfo.FileAttributes&FILE_ATTRIBUTE_DIRECTORY)
+		byte Buffer[sizeof(FILE_FULL_DIR_INFORMATION) + 512];
+
+
+		FILE_FULL_DIR_INFORMATION & FileInfo = *(FILE_FULL_DIR_INFORMATION *)Buffer;
+
+		UNICODE_STRING TempFileName = { 0,0,FileInfo.FileName };
+		NewDirectoryPath.RootDirectory = hNewFile;
+		ExistingDirectoryPath.RootDirectory = hExistingFile;
+		ExistingDirectoryPath.ObjectName = NewDirectoryPath.ObjectName = &TempFileName;
+
+
+		byte FileBuffer[1024];
+
+		FILE_BASIC_INFORMATION BaseInfo;
+		while (ZwQueryDirectoryFile(hExistingFile, NULL, NULL, NULL, &IoStatusBlock, Buffer, sizeof(Buffer), FileFullDirectoryInformation, -1, NULL, 0) == ERROR_SUCCESS)
 		{
-			if (IsDots(FileInfo.FileName, FileInfo.FileNameLength))
-				continue;
-
-			Status = NtCopyDirectory(ExistingDirectoryPath, NewDirectoryPath);
-		}
-		else
-		{
-			HANDLE hExistingFile;
-
-			Status = NtOpenFile(&hExistingFile, FILE_GENERIC_READ, &ExistingDirectoryPath, &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_DELETE, FILE_SEQUENTIAL_ONLY | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
-
-			if (Status)
-				break;
-
-			HANDLE hNewFile;
-
-			Status = NtCreateFile(&hNewFile, SYNCHRONIZE | FILE_GENERIC_WRITE, &NewDirectoryPath, &IoStatusBlock, NULL, FileInfo.FileAttributes, FILE_SHARE_READ, FILE_OVERWRITE_IF, FILE_SEQUENTIAL_ONLY | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT, NULL, NULL);
-
-			if (Status)
+			TempFileName.Length = TempFileName.MaximumLength = FileInfo.FileNameLength;
+			if (FileInfo.FileAttributes&FILE_ATTRIBUTE_DIRECTORY)
 			{
-				NtClose(hExistingFile);
-				break;
+				if (IsDots(FileInfo.FileName, FileInfo.FileNameLength))
+					continue;
+
+				Status = NtCopyDirectory(ExistingDirectoryPath, NewDirectoryPath);
 			}
-
-			DWORD cbData;
-
-			while (true)
+			else
 			{
-				if (!ReadFile(hExistingFile, FileBuffer, sizeof(FileBuffer), &cbData, NULL))
+				HANDLE hExistingFile;
+
+				Status = NtOpenFile(&hExistingFile, FILE_GENERIC_READ, &ExistingDirectoryPath, &IoStatusBlock, FILE_SHARE_READ | FILE_SHARE_DELETE, FILE_SEQUENTIAL_ONLY | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT);
+
+				if (Status)
+					break;
+
+				HANDLE hNewFile;
+
+				Status = NtCreateFile(&hNewFile, SYNCHRONIZE | FILE_GENERIC_WRITE, &NewDirectoryPath, &IoStatusBlock, NULL, FileInfo.FileAttributes, FILE_SHARE_READ, FILE_OVERWRITE_IF, FILE_SEQUENTIAL_ONLY | FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT, NULL, NULL);
+
+				if (Status)
 				{
-					Status = GetLastError();
+					NtClose(hExistingFile);
 					break;
 				}
 
-				if (!cbData)
-					break;
+				DWORD cbData;
 
-				WriteFile(hNewFile, FileBuffer, cbData, &cbData, NULL);
+				while (true)
+				{
+					if (!ReadFile(hExistingFile, FileBuffer, sizeof(FileBuffer), &cbData, NULL))
+					{
+						Status = GetLastError();
+						break;
+					}
+
+					if (!cbData)
+						break;
+
+					WriteFile(hNewFile, FileBuffer, cbData, &cbData, NULL);
+				}
+
+				if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation)==0)
+				{
+					NtSetInformationFile(hNewFile,&IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
+				}
+
+
+				NtClose(hNewFile);
+				NtClose(hExistingFile);
 			}
-
-			if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation)==0)
-			{
-				NtSetInformationFile(hNewFile,&IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
-			}
-
-
-			NtClose(hNewFile);
-			NtClose(hExistingFile);
 		}
+
+		if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation) == 0)
+		{
+			NtSetInformationFile(hNewFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
+		}
+
+		NtClose(hNewFile);
 	}
 
-	if (NtQueryInformationFile(hExistingFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation) == 0)
-	{
-		NtSetInformationFile(hNewFile, &IoStatusBlock, &BaseInfo, sizeof(BaseInfo), FileBasicInformation);
-	}
-
-	NtClose(hNewFile);
-Error1:
 	NtClose(hExistingFile);
-Error2:
 
 	return Status;
 }

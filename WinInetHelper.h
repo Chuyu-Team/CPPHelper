@@ -73,7 +73,7 @@ public:
 
 		if (m_hSession = ::InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, dwFlags))
 		{
-			DWORD TimeOut = 30 * 1000;
+			DWORD TimeOut = 5 * 1000;
 
 			::InternetSetOption(m_hSession, INTERNET_OPTION_CONNECT_TIMEOUT,&TimeOut,sizeof(TimeOut));
 			::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
