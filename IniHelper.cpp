@@ -89,7 +89,7 @@ BOOL IniGetValues(LPCWSTR FilePath, LPCWSTR Path, CString& Values)
 		}
 		else
 		{
-			Values.ReleaseBuffer(cchData);
+			Values.ReleaseBuffer(chNewData);
 			return TRUE;
 		}
 	}
