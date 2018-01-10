@@ -51,7 +51,11 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline xml_node<Ch>* XMLOpenNote(xml_node<Ch>* pRootNote, const Ch* SubPath)
+	_Check_return_ _Success_(return !=nullptr)
+	inline xml_node<Ch>* XMLOpenNote(
+		_In_   xml_node<Ch>* pRootNote,
+		_In_z_ const Ch*     SubPath
+		)
 	{
 		if (pRootNote == NULL)
 		{
@@ -73,7 +77,12 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline xml_node<Ch>* XMLCreateNote(xml_node<Ch>* pRootNote, const Ch* NoteName, DWORD CreateType)
+	_Check_return_ _Success_(return != nullptr)
+	inline xml_node<Ch>* XMLCreateNote(
+		_In_   xml_node<Ch>* pRootNote,
+		_In_z_ const Ch* NoteName,
+		_In_   DWORD CreateType
+		)
 	{
 		if (pRootNote == NULL)
 		{
@@ -119,7 +128,12 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline xml_node<Ch>* XMLSetNoteValue(xml_node<Ch>* RootNote, const Ch* NoteName, const Ch* NoteValue)
+	_Check_return_ _Success_(return != nullptr)
+	inline xml_node<Ch>* XMLSetNoteValue(
+		_In_   xml_node<Ch>* RootNote,
+		_In_z_ const Ch*     NoteName,
+		_In_z_ const Ch*     NoteValue
+		)
 	{
 		auto pNote = XMLCreateNote(RootNote, NoteName, OPEN_ALWAYS);
 
@@ -143,8 +157,12 @@ namespace rapidxml
 		return pNote;
 	}
 
-
-	inline xml_node<wchar_t>* XMLSetNoteValue(xml_node<wchar_t>* RootNote, const wchar_t* NoteName, FILETIME NoteValue)
+	_Check_return_ _Success_(return != nullptr)
+	inline xml_node<wchar_t>* XMLSetNoteValue(
+		_In_   xml_node<wchar_t>* RootNote,
+		_In_z_ const wchar_t*     NoteName,
+		_In_   const FILETIME&    NoteValue
+		)
 	{
 		auto pNote = XMLCreateNote(RootNote, NoteName, OPEN_ALWAYS);
 
@@ -164,7 +182,12 @@ namespace rapidxml
 		return pNote;
 	}
 
-	inline xml_node<char>* XMLSetNoteValue(xml_node<char>* RootNote, const char* NoteName, FILETIME NoteValue)
+	_Check_return_ _Success_(return != nullptr)
+	inline xml_node<char>* XMLSetNoteValue(
+		_In_   xml_node<char>* RootNote,
+		_In_z_ const char*     NoteName,
+		_In_   const FILETIME& NoteValue
+		)
 	{
 		auto pNote = XMLCreateNote(RootNote, NoteName, OPEN_ALWAYS);
 
@@ -186,12 +209,21 @@ namespace rapidxml
 
 
 	template<class Ch>
-	inline HRESULT XMLCreateXMLDocumentByString(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > Str, xml_document<Ch>* pDocument)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByString(
+		_In_ CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > Str,
+		_In_ xml_document<Ch>*                                    pDocument
+		)
 	{
 		return pDocument->Load(Str);
 	}
 
-	inline HRESULT XMLCreateXMLDocumentByData(const byte* pData, DWORD cbData, xml_document<wchar_t>* pDocument)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByData(
+		_In_reads_bytes_(cbData) const byte*            pData,
+		_In_                     DWORD                  cbData,
+		_In_                     xml_document<wchar_t>* pDocument
+		)
 	{
 		CStringW Temp;
 
@@ -221,7 +253,13 @@ namespace rapidxml
 		return pDocument->Load(Temp);
 	}
 
-	inline HRESULT XMLCreateXMLDocumentByData(const byte* pData, DWORD cbData, xml_document<wchar_t>* pDocument, int CodePage)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByData(
+		_In_reads_bytes_(cbData) const byte*            pData,
+		_In_                     DWORD                  cbData,
+		_In_                     xml_document<wchar_t>* pDocument,
+		_In_                     int                    CodePage
+		)
 	{
 		CStringW Temp;
 
@@ -244,7 +282,12 @@ namespace rapidxml
 		return pDocument->Load(Temp);
 	}
 
-	inline HRESULT XMLCreateXMLDocumentByData(const byte* pData, DWORD cbData, xml_document<char>* pDocument)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByData(
+		_In_reads_bytes_(cbData) const byte*         pData,
+		_In_                     DWORD               cbData,
+		_In_                     xml_document<char>* pDocument
+		)
 	{
 		CStringA Temp;
 
@@ -273,7 +316,13 @@ namespace rapidxml
 		return pDocument->Load(Temp);
 	}
 
-	inline HRESULT XMLCreateXMLDocumentByData(const byte* pData, DWORD cbData, xml_document<char>* pDocument, int CodePage)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByData(
+		_In_reads_bytes_(cbData) const byte*         pData,
+		_In_                     DWORD               cbData,
+		_In_                     xml_document<char>* pDocument,
+		_In_                     int                 CodePage
+		)
 	{
 		CStringA Temp;
 
@@ -297,7 +346,11 @@ namespace rapidxml
 	}
 
 	template<typename Ch>
-	inline HRESULT XMLCreateXMLDocumentByFile(LPCWSTR FilePath, xml_document<Ch>* pDocument)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLCreateXMLDocumentByFile(
+		_In_z_ LPCWSTR FilePath,
+		_In_ xml_document<Ch>* pDocument
+		)
 	{
 		CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 		if (hFile.IsInvalid())
@@ -319,7 +372,12 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline HRESULT XMLOpenMultiNotes(xml_node<Ch>* pRootNote, const Ch* SubPath, std::vector<xml_node<Ch>*>& Notes)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLOpenMultiNotes(
+		_In_   xml_node<Ch>*               pRootNote,
+		_In_z_ const Ch*                   SubPath,
+		_Out_  std::vector<xml_node<Ch>*>& Notes
+		)
 	{
 		auto NextPathName = ChTraitsCRT<Ch>::StringFindChar(SubPath, Ch('/'));
 
@@ -355,7 +413,10 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline std::vector<xml_node<Ch>*> XMLOpenMultiNotes(xml_node<Ch>* pRootNote, const Ch* SubPath)
+	inline std::vector<xml_node<Ch>*> XMLOpenMultiNotes(
+		_In_ xml_node<Ch>* pRootNote,
+		_In_z_ const Ch* SubPath
+		)
 	{
 		std::vector<xml_node<Ch>*> Notes;
 
@@ -367,12 +428,23 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline xml_attribute<Ch>* XMLGetNoteAttribute(xml_node<Ch>* Note, const Ch* AttributeName, int chAttributeName)
+	_Check_return_ _Success_(return != nullptr)
+	inline xml_attribute<Ch>* XMLGetNoteAttribute(
+		_In_                                                      xml_node<Ch>* Note,
+		_When_(chAttributeName == 0, _In_z_)
+		_When_(chAttributeName != 0, _In_reads_(chAttributeName)) const Ch*     AttributeName,
+		_In_opt_                                                  int           chAttributeName
+		)
 	{
 		return Note->first_attribute(AttributeName, chAttributeName);
 	}
 
-	inline HRESULT XMLGetNoteAttribute(xml_node<wchar_t>* Note, const wchar_t* AttributeName, LPBSTR pAttributeValue)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteAttribute(
+		_In_              xml_node<wchar_t>* Note,
+		_In_z_            const wchar_t*     AttributeName,
+		_Outptr_result_z_ LPBSTR             pAttributeValue
+		)
 	{
 		auto pAttribute = XMLGetNoteAttribute(Note, AttributeName, ChTraitsCRT<wchar_t>::SafeStringLen(AttributeName));
 
@@ -387,7 +459,12 @@ namespace rapidxml
 
 
 	template<class Ch>
-	inline HRESULT XMLGetNoteAttribute(xml_node<Ch>* Note, const Ch* AttributeName, CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& AttributeValue)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteAttribute(
+		_In_   xml_node<Ch>*                                 Note,
+		_In_z_ const Ch*                                     AttributeName,
+		_Out_  CStringT<Ch,StrTraitATL<Ch,ChTraitsCRT<Ch>>>& AttributeValue
+		)
 	{
 		auto pAttribute = XMLGetNoteAttribute(Note, AttributeName, ChTraitsCRT<Ch>::SafeStringLen(AttributeName));
 
@@ -401,7 +478,13 @@ namespace rapidxml
 		return S_OK;
 	}
 
-	inline HRESULT XMLGetNoteAttribute(XMLNote* RootNote, LPCWSTR Path, LPCWSTR AttributeName, LPBSTR pAttributeValue)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteAttribute(
+		_In_              XMLNote* RootNote,
+		_In_z_            LPCWSTR  Path,
+		_In_z_            LPCWSTR  AttributeName,
+		_Outptr_result_z_ LPBSTR   pAttributeValue
+		)
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
@@ -411,7 +494,12 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline HRESULT XMLGetNoteAttribute(xml_node<Ch>* RootNote, const Ch* Path, const Ch* AttributeName, CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& AttributeValue)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteAttribute(
+		_In_   xml_node<Ch>*                                         RootNote,
+		_In_z_ const Ch*                                             Path,
+		_In_z_ const Ch*                                             AttributeName,
+		_Out_  CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& AttributeValue)
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
@@ -420,7 +508,12 @@ namespace rapidxml
 		return XMLGetNoteAttribute(RootNote, AttributeName, AttributeValue);
 	}
 
-	inline HRESULT XMLGetNoteValue(XMLNote* RootNote, LPCWSTR Path, BSTR* Value)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteValue(
+		_In_              XMLNote* RootNote,
+		_In_z_            LPCWSTR  Path,
+		_Outptr_result_z_ BSTR*    Value
+		)
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
@@ -431,7 +524,11 @@ namespace rapidxml
 	}
 
 	template<class Ch>
-	inline HRESULT XMLGetNoteValue(xml_node<Ch>* RootNote, const Ch* Path, CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& Value)
+	_Check_return_ _Success_(return != S_OK)
+	inline HRESULT XMLGetNoteValue(
+		_In_   xml_node<Ch>*                                         RootNote,
+		_In_z_ const Ch*                                             Path,
+		_Out_  CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& Value)
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)

@@ -84,11 +84,11 @@ void AppendBstr(BSTR& Str, LPCWSTR Append)
 }
 
 
-DWORD StrRemove(LPWSTR RemoveStr)
+size_t StrRemove(LPWSTR RemoveStr)
 {
 	LPWSTR Next = StrSpet(RemoveStr);
 
-	int cch = Next - RemoveStr;
+	auto cch = Next - RemoveStr;
 
 	for (; *Next;)
 	{
@@ -172,7 +172,7 @@ CString Str2MultiStr(LPCWSTR Str)
 
 
 //将字节数按字符输出
-CString StrFormatByte(UINT64 ByteSize)
+CString StrFormatByte(LONGLONG ByteSize)
 {
 	WCHAR SizeStr[24];
 	return StrFormatByteSize64(ByteSize, SizeStr, 24);
@@ -1199,7 +1199,7 @@ CString StrCut(CString String, DWORD MaxLen, wchar_t ch)
 
 
 
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
+LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 {
 	SECURITY_ATTRIBUTES sa;
 	HANDLE hRead, hWrite;
@@ -1269,10 +1269,10 @@ HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 
 
 	//EXECDOSCMD.
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, DWORD (WINAPI *CallBack)(DWORD dwMessageId, WPARAM wParam, LPARAM lParam, PVOID UserData), LPVOID UserData)
+LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, BaseCallBack CallBack, LPVOID UserData)
 {
 	STARTUPINFO si = { sizeof(STARTUPINFO) };
 	PROCESS_INFORMATION pi = {};
@@ -1313,7 +1313,7 @@ HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, DWORD (WINAPI *CallBack)(DWO
 		WaitForSingleObject(pi.hProcess, -1);
 	}
 
-	DWORD ExitCore = E_FAIL;
+	DWORD ExitCore = 1;
 
 	GetExitCodeProcess(pi.hProcess, &ExitCore);
 
@@ -1323,7 +1323,7 @@ HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, DWORD (WINAPI *CallBack)(DWO
 
 }
 
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, bool Async)
+LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, bool Async)
 {
 	STARTUPINFO si = { sizeof(STARTUPINFO) };
 	PROCESS_INFORMATION pi = {};
@@ -1348,7 +1348,7 @@ HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, bool Async)
 	{
 		CloseHandle(pi.hThread);
 		CloseHandle(pi.hProcess);
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 	else
 	{
@@ -2092,14 +2092,14 @@ CString PathCat(LPCWSTR Path, LPCWSTR Append)
 
 
 
-void GetCtlCode(DWORD Code, DWORD& DeviceType, DWORD& Function, DWORD& Method, DWORD& Access)
-{
-	//
-	DeviceType = Code >> 16;
-	Access = (Code & 0xFFFF) >> 14;
-	Function = (Code & 0x3FFF) >> 2;
-	Method = Code & 0x3;
-}
+//void GetCtlCode(DWORD Code, DWORD& DeviceType, DWORD& Function, DWORD& Method, DWORD& Access)
+//{
+//	//
+//	DeviceType = Code >> 16;
+//	Access = (Code & 0xFFFF) >> 14;
+//	Function = (Code & 0x3FFF) >> 2;
+//	Method = Code & 0x3;
+//}
 
 
 HRESULT CreateFileByData(LPCWSTR FilePath, LPCWSTR lpName, LPCWSTR lpType, HMODULE hModule)

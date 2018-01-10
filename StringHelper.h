@@ -3,9 +3,13 @@
 
 
 //计算字符串长度
-int __fastcall StrLen(_In_opt_z_ LPCSTR psz);
+int __fastcall StrLen(
+	_In_opt_z_ LPCSTR psz
+	);
 
-int __fastcall StrLen(_In_opt_z_ LPCWSTR psz);
+int __fastcall StrLen(
+	_In_opt_z_ LPCWSTR psz
+	);
 
 #define StaticStrLen(str) (ArraySize(str)-1)
 
@@ -16,54 +20,104 @@ int __fastcall StrLen(_In_opt_z_ LPCWSTR psz);
 
 
 //过滤指定字符
-LPCWSTR StrFilter(LPCWSTR SrcStr, LPCWSTR IgnoreStr);
+LPCWSTR StrFilter(
+	_In_z_ LPCWSTR SrcStr,
+	_In_z_ LPCWSTR IgnoreStr
+	);
 
 //过滤不可见字符
 //LPCWSTR StrFilterNotVisible(LPCWSTR Str)
 #define StrFilterNotVisible(Str) StrFilter(Str, L" \t\r\n\xFEFF")
 
 //获取指定字符串
-bool StrGet(LPCWSTR &_Str, LPCWSTR EndStr, LPCWSTR ErrorStr, CString&data);
+bool StrGet(
+	_Inout_z_ LPCWSTR& _Str,
+	_In_z_    LPCWSTR  EndStr,
+	_In_opt_  LPCWSTR  ErrorStr,
+	_Out_     CString& data
+	);
 
-LPCWSTR StrExistI(LPCWSTR Str, LPCWSTR Find);
+LPCWSTR StrExistI(
+	_In_z_ LPCWSTR Str,
+	_In_z_ LPCWSTR Find
+	);
 
-void StrAppend(BSTR& Str, LPCWSTR Append);
+//void StrAppend(BSTR& Str, LPCWSTR Append);
 
-DWORD StrRemove(LPWSTR RemoveStr);
-
-
-CString StrFormat(_In_z_ _Printf_format_string_ LPCWSTR Format, ...);
-
-
-void StrDelete(CString& Scr, LPCWSTR Dst);
+size_t StrRemove(
+	_In_z_ LPWSTR RemoveStr
+	);
 
 
-CString Str2MultiStr(LPCWSTR Str);
+CString StrFormat(
+	_In_z_ _Printf_format_string_ LPCWSTR Format, ...
+	);
+
+
+void StrDelete(
+	_Inout_ CString& Scr,
+	_In_z_  LPCWSTR Dst
+	);
+
+
+CString Str2MultiStr(
+	_In_z_ LPCWSTR Str
+	);
 
 
 //将字节数按字符输出
-CString StrFormatByte(UINT64 ByteSize);
+CString StrFormatByte(
+	_In_ LONGLONG ByteSize
+	);
 
 
-CStringA Unicode2UTF8(LPCWSTR Str);
+CStringA Unicode2UTF8(
+	_In_z_ LPCWSTR Str
+	);
 
-CStringA Unicode2UTF8(LPCWSTR Str, DWORD cStr);
+CStringA Unicode2UTF8(
+	_In_NLS_string_(cchSrc) LPCWSTR Str,
+	_In_                    DWORD   cStr
+	);
 
-void UTF8ToUnicode(const char* Src, DWORD cchSrc, CString& Dest);
+void UTF8ToUnicode(
+	_In_NLS_string_(cSrc) const char* Src,
+	_In_                  DWORD       cchSrc,
+	_Out_                 CString&    Dest
+	);
 
-CString UTF8ToUnicode(const char* Src, DWORD cchSrc);
+CString UTF8ToUnicode(
+	_In_NLS_string_(cchSrc) const char* Src,
+	_In_                    DWORD       cchSrc
+	);
 
-CString UTF8ToUnicode(const char* Src);
+CString UTF8ToUnicode(
+	_In_z_ const char* Src
+	);
 
-BOOL StrRegexMatch(LPCWSTR Str, LPCWSTR MatchStr);
+BOOL StrRegexMatch(
+	_In_z_ LPCWSTR Str,
+	_In_z_ LPCWSTR MatchStr
+	);
 
 
-CString Guid2Str(const GUID& guid);
+CString Guid2Str(
+	_In_ const GUID& guid
+	);
 
 
 
-GUID Str2Guid(LPCWSTR String);
+GUID Str2Guid(
+	_In_z_ LPCWSTR String
+	);
 
-CString StrCut(CString String, DWORD MaxLen, wchar_t ch = L'.');
+CString StrCut(
+	_In_ CString String,
+	_In_ DWORD   MaxLen,
+	_In_ wchar_t ch     = L'.'
+	);
 
-DWORD MultiStrLen(LPCWSTR String);
+//"\0\0"结束
+DWORD MultiStrLen(
+	_In_ LPCWSTR String
+	);

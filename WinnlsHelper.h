@@ -4,7 +4,9 @@
 #include <atlstr.h>
 
 
-static CString LCIDToName(DWORD Lcid)
+static CString LCIDToName(
+	_In_ DWORD Lcid
+	)
 {
 	CString LanguagName;
 

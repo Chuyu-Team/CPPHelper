@@ -52,7 +52,10 @@ public:
 	{
 	}
 
-	HRESULT QueryMap(REFIID riid, void __RPC_FAR *__RPC_FAR *ppvObject)
+	HRESULT QueryMap(
+		_In_         REFIID                      riid,
+		_COM_Outptr_ void __RPC_FAR *__RPC_FAR * ppvObject
+		)
 	{
 		return E_NOINTERFACE;
 	}
@@ -100,18 +103,25 @@ public:
 		m_Collection.clear();
 	}
 
-	void PushItem(IUnknown* Item)
+	void PushItem(
+		_In_ IUnknown* Item
+		)
 	{
 		m_Collection.push_back(Item);
 	}
 
-	virtual HRESULT WINAPI get_Count(_Out_ long* pcount)
+	virtual HRESULT WINAPI get_Count(
+		_Out_ long* pcount
+		)
 	{
 		*pcount = m_Collection.size();
 		return S_OK;
 	}
 
-	virtual HRESULT WINAPI get_Item(_In_ long Index, _Out_ ItemType** pvar)
+	virtual HRESULT WINAPI get_Item(
+		_In_         long       Index,
+		_COM_Outptr_ ItemType** pvar
+		)
 	{
 		if (pvar == NULL)
 			return E_POINTER;
@@ -124,7 +134,9 @@ public:
 		return S_OK;
 	}
 
-	virtual HRESULT WINAPI get__NewEnum(_Out_ IUnknown** ppUnk)
+	virtual HRESULT WINAPI get__NewEnum(
+		_COM_Outptr_ IUnknown** ppUnk
+		)
 	{
 		return E_NOINTERFACE;
 	}
@@ -175,14 +187,16 @@ public:
 	}
 
 
-	HRESULT LoadDll(LPCWSTR DllName)
+	HRESULT LoadDll(
+		_In_z_ LPCWSTR DllName
+		)
 	{
 		Close();
 
 		hModule = LoadLibrary(DllName);
 
 		if (hModule == NULL)
-			return GetLastError();
+			return HresultFromBool();
 
 		
 		TDllGetClassObject _DllGetClassObject = (TDllGetClassObject)GetProcAddress(hModule, "DllGetClassObject");
@@ -209,7 +223,7 @@ public:
 		}
 		else
 		{
-			hr = GetLastError();
+			hr = HresultFromBool();
 		}
 
 		
@@ -223,7 +237,9 @@ class ComInitializeWrapper
 {
 public:
 	HRESULT hr;
-	ComInitializeWrapper(DWORD dwCoInit)
+	ComInitializeWrapper(
+		_In_ DWORD dwCoInit
+		)
 		:hr(CoInitializeEx(NULL, dwCoInit))
 	{
 		

@@ -2,6 +2,13 @@
 #include <Windows.h>
 #include <winioctl.h>
 
-HRESULT DiskUpdateBootCode(LPCWSTR BootPartition);
+_Check_return_ _Success_(return == S_OK)
+HRESULT DiskUpdateBootCode(
+	_In_z_ LPCWSTR BootPartition
+	);
 
-HRESULT DiskGetPartitionStyle(LPCWSTR Partition, PARTITION_STYLE* pPartitionStyle);
+_Check_return_ _Success_(return == S_OK)
+HRESULT DiskGetPartitionStyle(
+	_In_z_ LPCWSTR          Partition,
+	_Out_  PARTITION_STYLE* pPartitionStyle
+	);

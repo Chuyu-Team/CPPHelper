@@ -34,7 +34,11 @@ using namespace ABI::Windows::ApplicationModel::Resources::Core;
 
 HRESULT WINAPI DllGetActivationFactory(HSTRING activatableClassId, IActivationFactory ** factory);
 
-static HRESULT ActivateInstance(_In_ LPCWSTR ActivatableClassId, REFIID riid, _COM_Outptr_ void** instance)
+static HRESULT ActivateInstance(
+	_In_z_       LPCWSTR ActivatableClassId,
+	_In_         REFIID  riid,
+	_COM_Outptr_ void**  instance
+	)
 {
 	*instance = NULL;
 	CComPtr<IInspectable> pInspectable;
@@ -57,7 +61,10 @@ static HRESULT ActivateInstance(_In_ LPCWSTR ActivatableClassId, REFIID riid, _C
 }
 
 template<class Q>
-static HRESULT ActivateInstance(_In_ LPCWSTR ActivatableClassId, _COM_Outptr_ Q** instance)
+static HRESULT ActivateInstance(
+	_In_z_       LPCWSTR ActivatableClassId,
+	_COM_Outptr_ Q**     instance
+	)
 {
 	return ActivateInstance(ActivatableClassId, __uuidof(Q), (void**)instance);
 }
@@ -66,12 +73,20 @@ MIDL_INTERFACE("7d9da47a-8bc7-49d3-97aa-f7db06049172")
 IResourceManagerFactory : public IInspectable
 {
 public:
-	virtual HRESULT WINAPI GetResourceManagerForSystemProfile(IResourceManager * *) = 0;
-	virtual HRESULT WINAPI GetCurrentResourceManagerForSystemProfile(IResourceManager * *) = 0;
+	virtual HRESULT WINAPI GetResourceManagerForSystemProfile(
+		_COM_Outptr_ IResourceManager**
+		) = 0;
+
+	virtual HRESULT WINAPI GetCurrentResourceManagerForSystemProfile(
+		_COM_Outptr_ IResourceManager**
+		) = 0;
 };
 
 template<class T>
-static HRESULT GetActivationFactory(LPCWSTR ActivatableClassId, T** ppFactory)
+static HRESULT GetActivationFactory(
+	_In_z_       LPCWSTR ActivatableClassId,
+	_COM_Outptr_ T**     ppFactory
+	)
 {
 	HString _ActivatableClassId;
 	_ActivatableClassId.Set(ActivatableClassId);

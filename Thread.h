@@ -185,7 +185,8 @@ public:
 	static void Execute(
 		_In_ typename RequestType request,
 		_In_ void *pvWorkerParam,
-		_In_ OVERLAPPED *pOverlapped)
+		_In_ OVERLAPPED *pOverlapped
+		)
 	{
 		ATLASSERT(request != NULL);
 

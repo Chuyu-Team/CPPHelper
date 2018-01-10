@@ -39,136 +39,339 @@
 #define REG_OPTION 0
 #endif
 
+_Success_(return == ERROR_SUCCESS)
+typedef DWORD ( __stdcall *BaseCallBack)(
+	_In_     DWORD MessageId,
+	_In_opt_ WPARAM wParam,
+	_In_opt_ LPARAM lParam,
+	_In_opt_ PVOID UserData
+	);
 
-typedef DWORD(WINAPI *BaseCallBack)(DWORD MessageId, WPARAM wParam, LPARAM lParam, PVOID UserData);
 
 
 
+void FindPath(
+	_In_   CStringI FilePath,
+	_In_z_ LPCWSTR SubStr,
+	_Out_  std::set<CStringI>& FindList,
+	_In_   DWORD cchRootPath
+	);
 
-void FindPath(CStringI FilePath, LPCWSTR SubStr, std::set<CStringI>&FindList, DWORD cchRootPath);
 
+_Check_return_
+LSTATUS RunCmd(
+	_In_opt_z_ LPCWSTR FilePath,
+	_In_       CString CmdString,
+	_Out_opt_  CString* pOutString
+	);
 
+_Check_return_
+LSTATUS RunCmd(
+	_In_opt_z_ LPCWSTR FilePath,
+	_In_       CString CmdString,
+	_In_       bool Async = false
+	);
 
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString);
+_Check_return_
+LSTATUS RunCmd(
+	_In_opt_z_ LPCWSTR FilePath,
+	_In_       CString CmdString,
+	_In_opt_   BaseCallBack CallBack,
+	_In_opt_   LPVOID UserData
+	);
 
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString,bool Async =false);
-
-HRESULT RunCmd(LPCWSTR FilePath, CString CmdString, DWORD(WINAPI *CallBack)(DWORD dwMessageId, WPARAM wParam, LPARAM lParam, PVOID UserData), LPVOID UserData);
-
-HRESULT QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget);
+_Check_return_ _Success_(return == S_OK)
+HRESULT QuerySymbolicLinkObject(
+	_In_z_ LPCWSTR LinkName,
+	_Out_  CString& LinkTarget
+	);
 
 #if _MSC_VER >1500
 
-HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR pSrcDir, LPCWSTR VolumeName, BaseCallBack callBack, LPVOID pUserData);
+_Check_return_ _Success_(return == S_OK)
+HRESULT IsoCreateFileByPath(
+	_In_z_   LPCWSTR pIsoPath,
+	_In_z_   LPCWSTR pSrcDir,
+	_In_z_   LPCWSTR VolumeName,
+	_In_opt_ BaseCallBack callBack,
+	_In_opt_ LPVOID pUserData
+	);
 
 #endif
 
-HRESULT Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString = -1);
+_Check_return_ _Success_(return == S_OK)
+HRESULT Base642Binary(
+	_Out_                      CStringA& Binary,
+	_In_NLS_string_(cchString) LPCWSTR Base64String,
+	_In_                       DWORD cchString = -1
+	);
 
-void Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String);
+void Binary2Base64(
+	_In_reads_bytes_(ccbSrc) const void* Src,
+	_In_                     DWORD ccbSrc,
+	_Out_                    CString& Base64String
+	);
 
-HRESULT Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWORD cchString = -1);
+_Check_return_ _Success_(return == S_OK)
+HRESULT Base642Binary(
+	_Out_writes_bytes_to_(ccbBinary, ccbBinary) BYTE* pBinary,
+	_Inout_                                     DWORD& ccbBinary,
+	_In_NLS_string_(cchString)                  LPCWSTR Base64String,
+	_In_                                        DWORD cchString = -1
+	);
 
-void ReverseBinary(BYTE* pBinary, DWORD ccbBinary);
+void ReverseBinary(
+	_Inout_updates_bytes_(ccbBinary) BYTE* pBinary,
+	_In_                             DWORD ccbBinary
+	);
 
-BOOL PathIsSameVolume(LPCWSTR Path1, LPCWSTR Path2);
+_Check_return_
+BOOL PathIsSameVolume(
+	_In_z_ LPCWSTR Path1,
+	_In_z_ LPCWSTR Path2
+	);
 
-HRESULT AdjustPrivilege(ULONG Privilege, BOOL Enable = TRUE);
+_Check_return_ _Success_(return == S_OK)
+HRESULT AdjustPrivilege(
+	_In_ ULONG Privilege,
+	_In_ BOOL Enable = TRUE
+	);
 
-HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetHashByFilePath(
+	_In_z_                                                 LPCWSTR FilePath,
+	_In_                                                   ALG_ID Algid,
+	_Out_writes_bytes_(cbHashData)                         BYTE* pHashData,
+	_In_
+		_When_(Algid == CALG_MD5, _In_range_(>= , 16))
+		_When_(Algid == CALG_SHA1, _In_range_(>= , 20))
+		_When_(Algid == CALG_SHA_256, _In_range_(>= , 32)) DWORD cbHashData
+	);
 
-HRESULT GetHashByData(LPCBYTE pData, DWORD cbData, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetHashByData(
+	_In_reads_bytes_(cbData)                              LPCBYTE pData,
+	_In_                                                  DWORD cbData,
+	_In_                                                  ALG_ID Algid,
+	_Out_writes_bytes_(cbHashData)                        BYTE* pHashData,
+	_In_
+		_When_(Algid == CALG_MD5, _In_range_(>= , 16))
+		_When_(Algid == CALG_SHA1, _In_range_(>= , 20))
+		_When_(Algid == CALG_SHA_256, _In_range_(>= , 32)) DWORD cbHashData
+	);
 
-HRESULT GetMd5ByFilePath(LPCWSTR FilePath, BYTE FileMd5[16]);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetMd5ByFilePath(
+	_In_z_                 LPCWSTR FilePath,
+	_Out_writes_bytes_(16) BYTE FileMd5[16]
+	);
 
-HRESULT GetMd5ByData(LPCBYTE pData, DWORD cbData, BYTE FileMd5[16]);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetMd5ByData(
+	_In_reads_bytes_(cbData) LPCBYTE pData,
+	_In_                     DWORD   cbData,
+	_Out_writes_bytes_(16)   BYTE    FileMd5[16]
+	);
 
-HRESULT GetSha1ByFilePath(LPCWSTR FilePath, BYTE FileSha1[20]);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetSha1ByFilePath(
+	_In_z_                 LPCWSTR FilePath,
+	_Out_writes_bytes_(20) BYTE    FileSha1[20]
+	);
 
-void PathCat(CString& Path, LPCWSTR Append);
+void PathCat(
+	_In_       CString& Path,
+	_In_opt_z_ LPCWSTR  Append
+	);
 
-CString PathCat(LPCWSTR Path, LPCWSTR Append);
-
-
-
-
-
-HRESULT CreateFileByData(LPCWSTR FilePath, LPCWSTR lpName, LPCWSTR lpType, HMODULE hModule);
-
-HRESULT CreateFileByData(LPCWSTR FilePath, const void* pData, DWORD ccbData);
-
-HRESULT CreateFileByZipData(LPCWSTR FilePath, const void* Data, DWORD ccbData);
-
-HRESULT CreateRoot(LPCWSTR FilePath);
-
-HANDLE OpenDriver(LPCWSTR DriverPath, DWORD dwDesiredAccess = GENERIC_READ);
-
-HRESULT GetDriverLayout(HANDLE hDevice, CStringA &Buffer/*DRIVE_LAYOUT_INFORMATION_EX+ n * PARTITION_INFORMATION_EX*/);
-
-HRESULT GetDriverLayout(LPCWSTR DriverPath, CStringA& Buffer);
-
-int GetPartitionDisk(HANDLE hDevice);
-
-HRESULT GetPartitionInfomation(HANDLE hDevice, PARTITION_INFORMATION_EX& PartitionInfo);
-
-int GetPartition(HANDLE hDevice);
-
-HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath);
-
-HRESULT GetVhdVolumeFilePath(LPCWSTR hDevicePath, CString& VHDFilePath);
-
-HRESULT GetDiskCount(std::vector<CString>& pszDevicePath);
-
-
-byte* IsProcExists(byte* pBase, LPCSTR ProcName);
-
-bool IsProcExists(HANDLE hFile, LPCSTR ProcName);
-
-HRESULT CompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst);
-
-HRESULT DecompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst);
+CString PathCat(
+	_In_z_ LPCWSTR Path,
+	_In_opt_z_ LPCWSTR Append
+	);
 
 
-HRESULT NtPath2DosPath(LPCWSTR NtPath,CString& DosPath);
 
-HRESULT LoadString(LPCWSTR FilePath, int Index, CString& String);
 
-HRESULT LoadString(LPCWSTR FilePath, int Index, LPBSTR pString);
+_Check_return_ _Success_(return == S_OK)
+HRESULT CreateFileByData(
+	_In_z_ LPCWSTR FilePath,
+	_In_z_ LPCWSTR lpName,
+	_In_z_ LPCWSTR lpType,
+	_In_   HMODULE hModule
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT CreateFileByData(
+	_In_z_                    LPCWSTR     FilePath,
+	_In_reads_bytes_(ccbData) const void* pData,
+	_In_                      DWORD       ccbData
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT CreateFileByZipData(
+	_In_z_                    LPCWSTR     FilePath,
+	_In_reads_bytes_(ccbData) const void* Data,
+	_In_                      DWORD       ccbData
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT CreateRoot(
+	_In_z_ LPCWSTR FilePath
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HANDLE OpenDriver(
+	_In_z_ LPCWSTR DriverPath,
+	_In_   DWORD   dwDesiredAccess = GENERIC_READ
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetDriverLayout(
+	_In_  HANDLE    hDevice,
+	_Out_ CStringA& Buffer/*DRIVE_LAYOUT_INFORMATION_EX+ n * PARTITION_INFORMATION_EX*/
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetDriverLayout(
+	_In_z_ LPCWSTR DriverPath,
+	_Out_ CStringA& Buffer
+	);
+
+_Check_return_  _Success_(return == -1)
+int GetPartitionDisk(
+	_In_ HANDLE hDevice
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetPartitionInfomation(
+	_In_  HANDLE                    hDevice,
+	_Out_ PARTITION_INFORMATION_EX& PartitionInfo
+	);
+
+_Check_return_ _Success_(return == -1)
+int GetPartition(
+	_In_ HANDLE hDevice
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetVhdVolumeFilePath(
+	_In_  HANDLE   hDevice,
+	_Out_ CString& VHDFilePath
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetVhdVolumeFilePath(
+	_In_z_ LPCWSTR  hDevicePath,
+	_Out_  CString& VHDFilePath
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetDiskCount(
+	_Out_ std::vector<CString>& pszDevicePath
+	);
+
+_Check_return_ _Success_(return != nullptr)
+byte* IsProcExists(
+	_In_   byte*  pBase,
+	_In_z_ LPCSTR ProcName
+	);
+
+_Check_return_
+bool IsProcExists(
+	_In_   HANDLE hFile,
+	_In_z_ LPCSTR ProcName
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT CompressBuffer(
+	_In_reads_bytes_(cbSrc)     const void* Src,
+	_In_                        DWORD       cbSrc,
+	_Out_writes_bytes_(*pcbDst) void*       Dst,
+	_Inout_                     DWORD*      pcbDst
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT DecompressBuffer(
+	_In_reads_bytes_(cbSrc)     const void* Src,
+	_In_                        DWORD       cbSrc,
+	_Out_writes_bytes_(*pcbDst) void*       Dst,
+	_Inout_                     DWORD*      pcbDst
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT NtPath2DosPath(
+	_In_z_ LPCWSTR  NtPath,
+	_Out_  CString& DosPath
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT LoadString(
+	_In_z_ LPCWSTR  FilePath,
+	_In_   int      Index,
+	_Out_  CString& String
+	);
+
+_Check_return_ _Success_(return == S_OK)
+HRESULT LoadString(
+	_In_z_            LPCWSTR FilePath,
+	_In_              int     Index,
+	_Outptr_result_z_ LPBSTR  pString
+	);
 
 
 //HRESULT LoadString(HMODULE hModule,DWORD Index,CString& String);
 
 #define IMAGE_FIRST_DIRECTORY(ntheader) (IMAGE_DATA_DIRECTORY*)((byte*)IMAGE_FIRST_SECTION(ntheader)-sizeof(IMAGE_DATA_DIRECTORY)*IMAGE_NUMBEROF_DIRECTORY_ENTRIES)
 
-//PROCESSOR_ARCHITECTURE_UNKNOWN
-DWORD GetFileArchitecture(LPCWSTR FilePath);
+_Check_return_ _Success_(return != PROCESSOR_ARCHITECTURE_UNKNOWN)
+DWORD GetFileArchitecture(
+	_In_z_ LPCWSTR FilePath
+	);
 
-void GetCtlCode(DWORD Code, DWORD& DeviceType, DWORD& Function, DWORD& Method, DWORD& Access);
+//void GetCtlCode(DWORD Code, DWORD& DeviceType, DWORD& Function, DWORD& Method, DWORD& Access);
 
-
-PVOID64 GetProcAddressEx(HANDLE hProc, HMODULE hModule, LPCSTR lpProcName);
+_Check_return_ _Success_(return != nullptr)
+PVOID64 GetProcAddressEx(
+	_In_   HANDLE  hProc,
+	_In_   HMODULE hModule,
+	_In_z_ LPCSTR  lpProcName
+	);
 
 //GetLongPathName的安全封装
-HRESULT GetLongPathNameW(_In_ LPCTSTR lpszShortPath, _Inout_ CString& lpszLongPath);
+_Check_return_ _Success_(return == S_OK)
+HRESULT GetLongPathNameW(
+	_In_ LPCTSTR   lpszShortPath,
+	_Out_ CString& lpszLongPath
+	);
 
 
 //IsReparseTagNameSurrogate可以使用此函数代替下面函数功能
 //bool IsSimpleReparesPoint(DWORD dwReserved0);
 
+_Check_return_ _Success_(return <= 0xF)
+byte Char2Hex(
+	_In_ wchar_t ch
+	);
 
-byte Char2Hex(wchar_t ch);
 
+CString Binary2String(
+	_In_reads_bytes_(cbData) const byte* pBinaryData,
+	_In_                     DWORD       cbData
+	);
 
-CString Binary2String(const byte*pBinaryData, DWORD cbData);
+CStringA HexString2Binary(
+	_In_z_ LPCWSTR HexString
+	);
 
-CStringA HexString2Binary(LPCWSTR HexString);
-
-CStringA HexString2Binary(LPCSTR HexString);
+CStringA HexString2Binary(
+	_In_z_ LPCSTR HexString
+	);
 
 
 HRESULT HresultFromBool();
 
 //检测是否是兼容模式
+_Check_return_
 BOOL IsCompatibilityMode();
 
 //获取2位小版本号，比如6.1

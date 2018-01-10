@@ -4,7 +4,11 @@
 #pragma comment(lib,"VirtDisk.lib")
 #include <Sddl.h>
 
-static HANDLE AttachVirtualDisk(LPCWSTR VirtualDiskPath,bool ReadOnly)
+_Check_return_ _Success_(return == INVALID_HANDLE_VALUE)
+static HANDLE AttachVirtualDisk(
+	_In_z_ LPCWSTR VirtualDiskPath,
+	_In_ bool ReadOnly
+	)
 {
 	OPEN_VIRTUAL_DISK_PARAMETERS openParameters = {};
 	VIRTUAL_DISK_ACCESS_MASK accessMask;

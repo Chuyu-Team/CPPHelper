@@ -2,19 +2,58 @@
 #include <Windows.h>
 #include <atlstr.h>
 
-BOOL IniReadString(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName, CString& Str);
+_Check_return_
+BOOL IniReadString(
+	_In_z_ LPCWSTR  FilePath,
+	_In_z_ LPCWSTR  KeyPath,
+	_In_z_ LPCWSTR  ValueName,
+	_Out_  CString& Str
+	);
 
-BOOL IniReadBinaryData(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName, CStringA& Data);
+_Check_return_
+BOOL IniReadBinaryData(
+	_In_z_ LPCWSTR   FilePath,
+	_In_z_ LPCWSTR   KeyPath,
+	_In_z_ LPCWSTR   ValueName,
+	_Out_  CStringA& Data
+	);
 
-BOOL IniWriteString(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName, LPCWSTR Str);
+_Check_return_
+BOOL IniWriteString(
+	_In_z_ LPCWSTR FilePath,
+	_In_z_ LPCWSTR KeyPath,
+	_In_z_ LPCWSTR ValueName,
+	_In_z_ LPCWSTR Str
+	);
 
-BOOL IniWriteBinaryData(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName, const void*pBinaryData, DWORD ccbData);
+_Check_return_
+BOOL IniWriteBinaryData(
+	_In_z_                    LPCWSTR     FilePath,
+	_In_z_                    LPCWSTR     KeyPath,
+	_In_z_                    LPCWSTR     ValueName,
+	_In_reads_bytes_(ccbData) const void* pBinaryData,
+	_In_                      DWORD       ccbData
+	);
 
-BOOL IniDeleteString(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName);
+_Check_return_
+BOOL IniDeleteString(
+	_In_z_ LPCWSTR FilePath,
+	_In_z_ LPCWSTR KeyPath,
+	_In_z_ LPCWSTR ValueName
+	);
 
-BOOL IniGetSectionNames(LPCWSTR FilePath, CString& Names);
+_Check_return_
+BOOL IniGetSectionNames(
+	_In_z_ LPCWSTR  FilePath,
+	_Out_  CString& Names
+	);
 
-BOOL IniGetValues(LPCWSTR FilePath, LPCWSTR Path, CString& Values);
+_Check_return_
+BOOL IniGetValues(
+	_In_z_ LPCWSTR  FilePath,
+	_In_z_ LPCWSTR  Path,
+	_Out_  CString& Values
+	);
 
 //BOOL IniSetValues(LPCWSTR FilePath, LPCWSTR Path, LPCWSTR Values);
 #define IniSetValues(FilePath, Path, Values) WritePrivateProfileSection(Path,Values,FilePath)
