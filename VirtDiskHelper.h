@@ -4,7 +4,7 @@
 #pragma comment(lib,"VirtDisk.lib")
 #include <Sddl.h>
 
-_Check_return_ _Success_(return == INVALID_HANDLE_VALUE)
+_Check_return_ _Success_(return != INVALID_HANDLE_VALUE)
 static HANDLE AttachVirtualDisk(
 	_In_z_ LPCWSTR VirtualDiskPath,
 	_In_ bool ReadOnly
@@ -65,7 +65,7 @@ static HANDLE AttachVirtualDisk(
 
 	{
 
-		opStatus = ::GetLastError();
+		opStatus = ::GetLastError_s();
 
 		goto Cleanup;
 	}

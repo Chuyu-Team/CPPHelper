@@ -3,6 +3,9 @@
 #include "ComHelper.h"
 #include "km.h"
 
+#pragma warning(push)
+#pragma warning(disable: 28251)
+
 //ÄÚ´æÁ÷
 class CMemStream : public IUnknownT<CMemStream, IReadStream>
 {
@@ -279,7 +282,7 @@ public:
 		}
 		else
 		{
-			return HRESULT_FROM_WIN32(GetLastError());
+			return HresultFromBool();
 		}
 	}
 
@@ -299,11 +302,11 @@ public:
 	{
 		IO_STATUS_BLOCK  IoStatusBlock;
 
-		auto hr=NtWriteFile(hFile, NULL, NULL, NULL, &IoStatusBlock, (void*)pv, cb, (PLARGE_INTEGER)pByteOffset, NULL);
+		auto Status =NtWriteFile(hFile, NULL, NULL, NULL, &IoStatusBlock, (void*)pv, cb, (PLARGE_INTEGER)pByteOffset, NULL);
 
-		if (hr)
+		if (Status<0)
 		{
-			return HRESULT_FROM_WIN32(RtlNtStatusToDosError(hr));
+			return HRESULT_FROM_WIN32(RtlNtStatusToDosError(Status));
 		}
 
 		if (pcbWritten)
@@ -319,16 +322,21 @@ public:
 	{
 		IO_STATUS_BLOCK IoStatusBlock;
 
-		return NtSetInformationFile(hFile, &IoStatusBlock, &Size, sizeof(FILE_END_OF_FILE_INFORMATION), FileEndOfFileInformation);
+		auto Status = NtSetInformationFile(hFile, &IoStatusBlock, &Size, sizeof(FILE_END_OF_FILE_INFORMATION), FileEndOfFileInformation);
+
+		if (Status < 0)
+			return HRESULT_FROM_WIN32(RtlNtStatusToDosError(Status));
+		else
+			return S_OK;
 	}
 };
 
 
 IReadWriteStream* StreamCreate(LPCWSTR FilePath,
-	_In_ DWORD dwDesiredAccess,
-	_In_ DWORD dwShareMode,
-	_In_ DWORD dwCreationDisposition,
-	_In_ DWORD dwFlagsAndAttributes )
+	DWORD dwDesiredAccess,
+	DWORD dwShareMode,
+	DWORD dwCreationDisposition,
+	DWORD dwFlagsAndAttributes )
 {
 	auto hFile = CreateFile(FilePath, dwDesiredAccess, dwShareMode,NULL, dwCreationDisposition, dwFlagsAndAttributes| FILE_OPTION,0);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -553,3 +561,6 @@ IReadWriteStream* StreamCreateVirtualWrite(IReadStream* pStream)
 {
 	return new CVirtualWriteStream(pStream);
 }
+
+
+#pragma warning(pop)

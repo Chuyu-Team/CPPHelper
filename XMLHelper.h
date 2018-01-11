@@ -209,8 +209,8 @@ namespace rapidxml
 
 
 	template<class Ch>
-	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByString(
+	_Check_return_
+	inline LSTATUS XMLCreateXMLDocumentByString(
 		_In_ CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > Str,
 		_In_ xml_document<Ch>*                                    pDocument
 		)
@@ -218,8 +218,8 @@ namespace rapidxml
 		return pDocument->Load(Str);
 	}
 
-	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByData(
+	_Check_return_
+	inline LSTATUS XMLCreateXMLDocumentByData(
 		_In_reads_bytes_(cbData) const byte*            pData,
 		_In_                     DWORD                  cbData,
 		_In_                     xml_document<wchar_t>* pDocument
@@ -253,8 +253,8 @@ namespace rapidxml
 		return pDocument->Load(Temp);
 	}
 
-	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByData(
+	_Check_return_
+	inline LSTATUS XMLCreateXMLDocumentByData(
 		_In_reads_bytes_(cbData) const byte*            pData,
 		_In_                     DWORD                  cbData,
 		_In_                     xml_document<wchar_t>* pDocument,
@@ -283,7 +283,7 @@ namespace rapidxml
 	}
 
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByData(
+	inline LSTATUS XMLCreateXMLDocumentByData(
 		_In_reads_bytes_(cbData) const byte*         pData,
 		_In_                     DWORD               cbData,
 		_In_                     xml_document<char>* pDocument
@@ -317,7 +317,7 @@ namespace rapidxml
 	}
 
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByData(
+	inline LSTATUS XMLCreateXMLDocumentByData(
 		_In_reads_bytes_(cbData) const byte*         pData,
 		_In_                     DWORD               cbData,
 		_In_                     xml_document<char>* pDocument,
@@ -338,7 +338,7 @@ namespace rapidxml
 			break;
 		default:
 			assert(0);
-			return 87;
+			return ERROR_INVALID_PARAMETER;
 			break;
 		}
 
@@ -347,9 +347,9 @@ namespace rapidxml
 
 	template<typename Ch>
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLCreateXMLDocumentByFile(
-		_In_z_ LPCWSTR FilePath,
-		_In_ xml_document<Ch>* pDocument
+	inline LSTATUS XMLCreateXMLDocumentByFile(
+		_In_z_ LPCWSTR           FilePath,
+		_In_   xml_document<Ch>* pDocument
 		)
 	{
 		CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPTION, 0);
@@ -364,16 +364,16 @@ namespace rapidxml
 		if (!pBase)
 			return GetLastError();
 
-		auto ret = XMLCreateXMLDocumentByData(pBase, GetFileSize(hFile, NULL), pDocument);
+		auto lStatus = XMLCreateXMLDocumentByData(pBase, GetFileSize(hFile, NULL), pDocument);
 
 		UnmapViewOfFile(pBase);
 
-		return ret;
+		return lStatus;
 	}
 
 	template<class Ch>
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLOpenMultiNotes(
+	inline LSTATUS XMLOpenMultiNotes(
 		_In_   xml_node<Ch>*               pRootNote,
 		_In_z_ const Ch*                   SubPath,
 		_Out_  std::vector<xml_node<Ch>*>& Notes
@@ -409,7 +409,7 @@ namespace rapidxml
 			}
 		}
 
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 
 	template<class Ch>
@@ -440,7 +440,7 @@ namespace rapidxml
 	}
 
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteAttribute(
+	inline LSTATUS XMLGetNoteAttribute(
 		_In_              xml_node<wchar_t>* Note,
 		_In_z_            const wchar_t*     AttributeName,
 		_Outptr_result_z_ LPBSTR             pAttributeValue
@@ -449,18 +449,18 @@ namespace rapidxml
 		auto pAttribute = XMLGetNoteAttribute(Note, AttributeName, ChTraitsCRT<wchar_t>::SafeStringLen(AttributeName));
 
 		if (pAttribute == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
 		*pAttributeValue = SysAllocStringLen(pAttribute->value(), pAttribute->value_size());
 
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 
 
 
 	template<class Ch>
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteAttribute(
+	inline LSTATUS XMLGetNoteAttribute(
 		_In_   xml_node<Ch>*                                 Note,
 		_In_z_ const Ch*                                     AttributeName,
 		_Out_  CStringT<Ch,StrTraitATL<Ch,ChTraitsCRT<Ch>>>& AttributeValue
@@ -469,17 +469,17 @@ namespace rapidxml
 		auto pAttribute = XMLGetNoteAttribute(Note, AttributeName, ChTraitsCRT<Ch>::SafeStringLen(AttributeName));
 
 		if (pAttribute == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
 		AttributeValue.SetString(pAttribute->value(), pAttribute->value_size());
 
 		//*pAttributeValue = SysAllocStringLen(, );
 
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteAttribute(
+	inline LSTATUS XMLGetNoteAttribute(
 		_In_              XMLNote* RootNote,
 		_In_z_            LPCWSTR  Path,
 		_In_z_            LPCWSTR  AttributeName,
@@ -488,14 +488,14 @@ namespace rapidxml
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
 		return XMLGetNoteAttribute(RootNote, AttributeName, pAttributeValue);
 	}
 
 	template<class Ch>
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteAttribute(
+	inline LSTATUS XMLGetNoteAttribute(
 		_In_   xml_node<Ch>*                                         RootNote,
 		_In_z_ const Ch*                                             Path,
 		_In_z_ const Ch*                                             AttributeName,
@@ -503,13 +503,13 @@ namespace rapidxml
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
 		return XMLGetNoteAttribute(RootNote, AttributeName, AttributeValue);
 	}
 
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteValue(
+	inline LSTATUS XMLGetNoteValue(
 		_In_              XMLNote* RootNote,
 		_In_z_            LPCWSTR  Path,
 		_Outptr_result_z_ BSTR*    Value
@@ -517,24 +517,29 @@ namespace rapidxml
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
-		*Value = SysAllocStringLen(RootNote->value(), RootNote->value_size());
-		return S_OK;
+		auto szValue = SysAllocStringLen(RootNote->value(), RootNote->value_size());
+
+		if (!szValue)
+			return ERROR_OUTOFMEMORY;
+
+		*Value = szValue;
+		return ERROR_SUCCESS;
 	}
 
 	template<class Ch>
 	_Check_return_ _Success_(return != S_OK)
-	inline HRESULT XMLGetNoteValue(
+	inline LSTATUS XMLGetNoteValue(
 		_In_   xml_node<Ch>*                                         RootNote,
 		_In_z_ const Ch*                                             Path,
 		_Out_  CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > >& Value)
 	{
 		RootNote = XMLOpenNote(RootNote, Path);
 		if (RootNote == NULL)
-			return __HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+			return ERROR_PATH_NOT_FOUND;
 
 		Value.SetString(RootNote->value(), RootNote->value_size());
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 }

@@ -20,10 +20,10 @@ BOOL IniReadBinaryData(
 
 _Check_return_
 BOOL IniWriteString(
-	_In_z_ LPCWSTR FilePath,
-	_In_z_ LPCWSTR KeyPath,
-	_In_z_ LPCWSTR ValueName,
-	_In_z_ LPCWSTR Str
+	_In_z_     LPCWSTR FilePath,
+	_In_z_     LPCWSTR KeyPath,
+	_In_z_     LPCWSTR ValueName,
+	_In_opt_z_ LPCWSTR Str
 	);
 
 _Check_return_

@@ -245,7 +245,7 @@ public:
 
 			if (m_ofn.lpstrFileTitle == NULL || (*m_ofn.lpstrFileTitle) == NULL)
 			{
-				LoadString(L"Comdlg32.dll", 439, FileTitle);
+				LoadString_s(L"Comdlg32.dll", 439, FileTitle);
 
 				/*if (FileTitle.GetLength() == 0)
 				{
@@ -256,7 +256,7 @@ public:
 				GetParent().GetDlgItem(IDOK).SetWindowTextW(FileTitle);
 			}
 
-			LoadStringW(L"Comdlg32.dll", 438, FileTitle);
+			LoadString_s(L"Comdlg32.dll", 438, FileTitle);
 
 			/*if (FileTitle.GetLength() == 0)
 			FileTitle = L"ÎÄ¼þ¼Ð";*/

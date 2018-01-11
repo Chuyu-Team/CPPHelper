@@ -59,8 +59,8 @@ NTSTATUS DeleteDirectory(
 	_In_   BOOL    DeleteRootPath = TRUE
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT UpdateFile(
+_Check_return_
+LSTATUS UpdateFile(
 	_In_ CString lpExistingFileName,
 	_In_ CString lpNewFileName
 	);
@@ -110,8 +110,8 @@ UINT64 GetDirectorySize(
 	);
 
 //可以NTFS压缩一个文件/文件夹
-_Check_return_ _Success_(return == S_OK)
-HRESULT CompressFile(
+_Check_return_
+LSTATUS CompressFile(
 	_In_z_ LPCWSTR FilePath
 	);
 
@@ -131,15 +131,15 @@ BOOL CheckUpdateFile(
 	_Out_opt_ UINT64*                  pSize
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetFileVersion(
+_Check_return_
+LSTATUS GetFileVersion(
 	_In_                  HMODULE hFileMoudle,
 	_Out_writes_bytes_(8) UINT16  Version[4],
 	_In_                  WORD    wLanguage   = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetFileVersion(
+_Check_return_
+LSTATUS GetFileVersion(
 	_In_z_                LPCWSTR FilePath,
 	_Out_writes_bytes_(8) UINT16  Version[4],
 	_In_                  WORD    wLanguage  = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)
@@ -151,13 +151,14 @@ UINT64 GetDirectoryAllocationSize(
 	);
 
 _Check_return_ _Success_(return == S_OK)
-HRESULT CrateDirectorHandLink(
+LSTATUS CrateDirectorHandLink(
 	_In_ CString To,
 	_In_ CString From
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT MoveDirectory(
+//Error Code https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164(v=vs.85).aspx
+_Check_return_ _Success_(return == 0)
+int MoveDirectory(
 	_In_ CString ExistingDirectoryPath,
 	_In_ CString NewDirectoryInfoPath
 	);

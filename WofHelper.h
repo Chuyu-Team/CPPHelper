@@ -25,11 +25,13 @@ struct ExternalBacking
 
 #pragma pack(pop)
 
+_Check_return_
 BOOL IsWofCompress(
 	_In_z_ LPCWSTR FilePath
 	);
 
-HRESULT UnWofCompressFile(
+_Check_return_
+LSTATUS UnWofCompressFile(
 	_In_z_ LPCWSTR FilePath
 	);
 
@@ -38,11 +40,13 @@ HRESULT UnWofCompressFile(
 #define WofXpress16k 3
 #define WofLZX 1
 
-HRESULT WofCompressFile(
+_Check_return_
+LSTATUS WofCompressFile(
 	_In_z_                                        LPCWSTR FilePath,
-	_In_ _Field_range_(WofXpress4k, WofXpress16k) DWORD   CompressType
+	_In_ _In_range_(WofXpress4k, WofXpress16k) DWORD   CompressType
 	);
 
-HRESULT UnWofCompressRoot(
+_Check_return_
+LSTATUS UnWofCompressRoot(
 	_In_ CString RootPath
 	);

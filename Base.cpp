@@ -4,6 +4,8 @@
 #include <setupapi.h>
 #pragma comment(lib,"setupapi.lib")
 
+#pragma warning(push)
+#pragma warning(disable: 28251)
 
 //过滤指定字符
 LPCWSTR StrFilter(LPCWSTR SrcStr, LPCWSTR IgnoreStr)
@@ -843,24 +845,24 @@ const BYTE FAT_PBR[] =
 	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xAC,0xC1,0xCE,0x55,0xAA,
 };
 
-HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
+LSTATUS DiskUpdateBootCode(LPCWSTR BootPartition)
 {
 	CHFile hRootPath = CreateFile(BootPartition, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
-		return GetLastError();
+		return GetLastError_s();
 
 
 	PARTITION_INFORMATION_EX PartitionInfo = {};
 	DWORD cbPartitionInfo = 0;
 
 	if (DeviceIoControl(hRootPath, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &PartitionInfo, sizeof(PARTITION_INFORMATION_EX), &cbPartitionInfo, NULL) == FALSE)
-		return GetLastError();
+		return GetLastError_s();
 
 
 	if (PartitionInfo.PartitionStyle != PARTITION_STYLE::PARTITION_STYLE_MBR)
 	{
-		return E_INVALIDARG;
+		return ERROR_INVALID_PARAMETER;
 	}
 
 	/*如果不是一个主分区那么返回环境错误*/
@@ -873,7 +875,7 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 	wchar_t FileSystemNameSize[MAX_PATH + 1] = {};
 
 	if (!GetVolumeInformationByHandleW(hRootPath, NULL, 0, NULL, NULL, NULL, FileSystemNameSize, ArraySize(FileSystemNameSize)))
-		return GetLastError();
+		return GetLastError_s();
 
 
 	BYTE PBR[10 * 512];
@@ -881,7 +883,7 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 	DWORD cbData;
 
 	if (!ReadFile(hRootPath, PBR, sizeof(PBR), &cbData, NULL))
-		return GetLastError();
+		return GetLastError_s();
 
 	if (cbData != sizeof(PBR))
 		return ERROR_INVALID_FUNCTION;
@@ -951,20 +953,20 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 
 	if (!DeviceIoControl(hRootPath, IOCTL_VOLUME_LOGICAL_TO_PHYSICAL, &LogicalOffset, sizeof(LogicalOffset), &PhysicalOffsets, sizeof(PhysicalOffsets), &cbRet, NULL))
 	{
-		return E_NOINTERFACE;
+		return GetLastError_s();
 	}
 
 	hRootPath = CreateFile(StrFormat(L"\\\\.\\PhysicalDrive%u", PhysicalOffsets.PhysicalOffset->DiskNumber), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
-		return GetLastError();
+		return GetLastError_s();
 
 
 	DISK_GEOMETRY DismGeoMetry;
 
 	if (!DeviceIoControl(hRootPath, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0, &DismGeoMetry, sizeof(DismGeoMetry), &cbRet, NULL))
 	{
-		return E_NOINTERFACE;
+		return GetLastError_s();
 	}
 
 
@@ -1015,28 +1017,28 @@ HRESULT DiskUpdateBootCode(LPCWSTR BootPartition)
 
 	SetFilePointer(hRootPath, 0, NULL, FILE_BEGIN);
 
-	return WriteFile(hRootPath, pMbr, DismGeoMetry.BytesPerSector, &cbReat, NULL) ? S_OK : ERROR_INVALID_FUNCTION;
+	return WriteFile(hRootPath, pMbr, DismGeoMetry.BytesPerSector, &cbReat, NULL) ? ERROR_SUCCESS : GetLastError_s();
 }
 
 
-HRESULT DiskGetPartitionStyle(LPCWSTR Partition, PARTITION_STYLE* pPartitionStyle)
+LSTATUS DiskGetPartitionStyle(LPCWSTR Partition, PARTITION_STYLE* pPartitionStyle)
 {
 	CHFile hRootPath = CreateFile(Partition, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 
 	if (hRootPath.IsInvalid())
-		return GetLastError();
+		return GetLastError_s();
 
 	PARTITION_INFORMATION_EX PartitionInfo = {};
 	DWORD cbPartitionInfo = 0;
 
 	if (DeviceIoControl(hRootPath, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &PartitionInfo, sizeof(PARTITION_INFORMATION_EX), &cbPartitionInfo, NULL) == FALSE)
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 	else
 	{
 		*pPartitionStyle = PartitionInfo.PartitionStyle;
-		return S_OK;
+		return ERROR_SUCCESS;
 	}
 }
 
@@ -1209,7 +1211,7 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 	sa.bInheritHandle = TRUE;
 	if (!CreatePipe(&hRead, &hWrite, &sa, 0))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	STARTUPINFO si = { sizeof(STARTUPINFO) };
@@ -1229,7 +1231,7 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 
 	if (!CreateProcessW(FilePath, CmdString.GetBuffer(), NULL, NULL, TRUE, CREATE_UNICODE_ENVIRONMENT, NULL, SystempPath, &si, &pi))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	CloseHandle(hWrite);
@@ -1290,7 +1292,7 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, BaseCallBack CallBack, LPVOI
 
 	if (!CreateProcessW(FilePath, CmdString.GetBuffer(), NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	CloseHandle(pi.hThread);
@@ -1341,7 +1343,7 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, bool Async)
 
 	if (!CreateProcessW(FilePath, CmdString.GetBuffer(), NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	if (Async)
@@ -1404,7 +1406,7 @@ HRESULT SanInterface(IUnknown* pInterface)
 
 
 
-HRESULT QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget)
+NTSTATUS QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget)
 {
 	HANDLE hH = INVALID_HANDLE_VALUE;
 
@@ -1414,30 +1416,26 @@ HRESULT QuerySymbolicLinkObject(LPCWSTR LinkName, CString& LinkTarget)
 
 	OBJECT_ATTRIBUTES oa = { sizeof(OBJECT_ATTRIBUTES), NULL, &ObjectName, OBJ_CASE_INSENSITIVE };
 
-	HRESULT hr = ZwOpenSymbolicLinkObject(&hH, GENERIC_READ, &oa);
+	auto Status = ZwOpenSymbolicLinkObject(&hH, GENERIC_READ, &oa);
 
-	if (hr!=S_OK)
-		return HRESULT_FROM_NT( hr);
+	if (Status!= STATUS_SUCCESS)
+		return Status;
 
 	UNICODE_STRING _LinkTarget = { 0, MAX_PATH * 2, LinkTarget.GetBuffer(MAX_PATH) };
 
 	ULONG ccbRet;
 
 
-	hr = ZwQuerySymbolicLinkObject(hH, &_LinkTarget, &ccbRet);
+	Status = ZwQuerySymbolicLinkObject(hH, &_LinkTarget, &ccbRet);
 
 	ZwClose(hH);
 
-	if (hr == S_OK)
+	if (Status == STATUS_SUCCESS)
 	{
 		LinkTarget.ReleaseBufferSetLength(_LinkTarget.Length >> 1);
 	}
-	else
-	{
-		hr = HRESULT_FROM_NT(hr);
-	}
 
-	return hr;
+	return Status;
 }
 
 //用NTFS压缩压缩一个文件/文件夹
@@ -1751,7 +1749,7 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 
 #endif
 
-void Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String)
+LSTATUS Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String)
 {
 	DWORD Dst = 0;
 
@@ -1761,18 +1759,21 @@ void Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String)
 		NULL, &Dst
 	))
 	{
-		return;
+		return GetLastError_s();
 	}
 
-	CryptBinaryToStringW(
+	if(!CryptBinaryToStringW(
 		(const BYTE*)Src, ccbSrc,
 		CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
-		Base64String.GetBuffer(Dst), &Dst);
+		Base64String.GetBuffer(Dst), &Dst))
+	{
+		return GetLastError_s();
+	}
 
 	Base64String.ReleaseBufferSetLength(Dst);
 }
 
-HRESULT Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWORD cchString)
+LSTATUS Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWORD cchString)
 {
 	if (cchString == -1)
 		cchString = StrLen(Base64String);
@@ -1787,38 +1788,40 @@ HRESULT Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWO
 		NULL         // pdwFlags (not needed)
 	))
 	{
-		if (GetLastError() == ERROR_MORE_DATA)
+		auto lStatus = GetLastError_s();
+
+		if (lStatus == ERROR_MORE_DATA)
 		{
 			ccbBinary = cchString;
 		}
 
-		return GetLastError();
+		return lStatus;
 	}
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
-HRESULT Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
+LSTATUS Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
 {
 	if (cchString == -1)
 		cchString = StrLen(Base64String);
-
-	Binary.Empty();
 
 	//Binary.reserve(cchString);
 	Binary.GetBuffer(cchString);
 
 	DWORD nLenOut = Binary.GetAllocLength();
 
-	HRESULT hr = Base642Binary((BYTE*)Binary.GetBuffer(), nLenOut, Base64String, cchString);
+	auto lStatus = Base642Binary((BYTE*)Binary.GetBuffer(), nLenOut, Base64String, cchString);
 
-	if (hr==S_OK)
+	if (lStatus!=ERROR_SUCCESS)
 	{
 		//Binary._Mylast() = Binary._Myfirst() + nLenOut;
-		Binary.ReleaseBufferSetLength(nLenOut);
+		return lStatus;
 	}
+	
+	Binary.ReleaseBufferSetLength(nLenOut);
 
-	return hr;
+	return ERROR_SUCCESS;
 }
 
 void ReverseBinary(BYTE* pBinary, DWORD ccbBinary)
@@ -1874,14 +1877,14 @@ CString UTF8ToUnicode(const char* Src)
 
 
 
-HRESULT AdjustPrivilege(ULONG Privilege, BOOL Enable)
+NTSTATUS AdjustPrivilege(ULONG Privilege, BOOL Enable)
 {
 	BOOLEAN IsEnable;
 
 	return RtlAdjustPrivilege(Privilege, Enable, FALSE, &IsEnable);
 }
 
-HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData)
+LSTATUS GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData)
 {
 	HCRYPTHASH hHash = 0;
 	HCRYPTPROV hProv = 0;
@@ -1892,13 +1895,14 @@ HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD
 		PROV_RSA_AES,
 		CRYPT_VERIFYCONTEXT) == FALSE)
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
-	HRESULT hr = S_OK;
+	
+	LSTATUS lStatus = ERROR_SUCCESS;
 
 	if (CryptCreateHash(hProv, Algid, 0, 0, &hHash) == FALSE)
 	{
-		hr = GetLastError();
+		lStatus = GetLastError_s();
 	}
 	else
 	{
@@ -1912,35 +1916,35 @@ HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD
 
 		if (hFile.IsInvalid())
 		{
-			hr = GetLastError();
+			lStatus = GetLastError_s();
 		}
 		else
 		{
 			BYTE Buffer[1024];
 			DWORD cbRead;
-			hr = ERROR_INVALID_DATA;
+			lStatus = ERROR_INVALID_DATA;
 
 			while (ReadFile(hFile, Buffer, sizeof(Buffer), &cbRead, NULL))
 			{
 				if (0 == cbRead)
 				{
-					hr = S_OK;
+					lStatus = ERROR_SUCCESS;
 					break;
 				}
 
 				if (CryptHashData(hHash, Buffer, cbRead, 0) == FALSE)
 				{
-					hr = GetLastError();
+					lStatus = GetLastError_s();
 					break;
 				}
 			}
 
 
-			if (hr == S_OK)
+			if (lStatus == ERROR_SUCCESS)
 			{
 				cbRead = cbHashData;
 				if (CryptGetHashParam(hHash, HP_HASHVAL, pHashData, &cbRead, 0) == FALSE)
-					hr = GetLastError();
+					lStatus = GetLastError_s();
 			}
 		}
 
@@ -1948,10 +1952,10 @@ HRESULT GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD
 	}
 
 	CryptReleaseContext(hProv, 0);
-	return hr;
+	return lStatus;
 }
 
-HRESULT GetHashByData(LPCBYTE pData, DWORD cbData, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData)
+LSTATUS GetHashByData(LPCBYTE pData, DWORD cbData, ALG_ID Algid, BYTE* pHashData, DWORD cbHashData)
 {
 	HCRYPTHASH hHash = 0;
 	HCRYPTPROV hProv = 0;
@@ -1962,26 +1966,26 @@ HRESULT GetHashByData(LPCBYTE pData, DWORD cbData, ALG_ID Algid, BYTE* pHashData
 		PROV_RSA_AES,
 		CRYPT_VERIFYCONTEXT) == FALSE)
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
-	HRESULT hr = S_OK;
+	LSTATUS lStatus = ERROR_SUCCESS;
 
 	if (CryptCreateHash(hProv, Algid, 0, 0, &hHash) == FALSE)
 	{
-		hr = GetLastError();
+		lStatus = GetLastError_s();
 	}
 	else
 	{
 		if (CryptHashData(hHash, pData, cbData, 0) == FALSE)
 		{
-			hr = GetLastError();
+			lStatus = GetLastError_s();
 		}
 
-		if (hr == S_OK)
+		if (lStatus == ERROR_SUCCESS)
 		{
 			cbData = cbHashData;
 			if (CryptGetHashParam(hHash, HP_HASHVAL, pHashData, &cbData, 0) == FALSE)
-				hr = GetLastError();
+				lStatus = GetLastError_s();
 		}
 
 
@@ -1989,20 +1993,20 @@ HRESULT GetHashByData(LPCBYTE pData, DWORD cbData, ALG_ID Algid, BYTE* pHashData
 	}
 
 	CryptReleaseContext(hProv, 0);
-	return hr;
+	return lStatus;
 }
 
-HRESULT GetMd5ByFilePath(LPCWSTR FilePath, BYTE FileMd5[16])
+LSTATUS GetMd5ByFilePath(LPCWSTR FilePath, BYTE FileMd5[16])
 {
 	return GetHashByFilePath(FilePath, CALG_MD5, FileMd5, sizeof(BYTE) * 16);
 }
 
-HRESULT GetMd5ByData(LPCBYTE pData, DWORD cbData, BYTE FileMd5[16])
+LSTATUS GetMd5ByData(LPCBYTE pData, DWORD cbData, BYTE FileMd5[16])
 {
 	return GetHashByData(pData, cbData, CALG_MD5, FileMd5, sizeof(BYTE) * 16);
 }
 
-HRESULT GetSha1ByFilePath(LPCWSTR FilePath, BYTE FileSha1[20])
+LSTATUS GetSha1ByFilePath(LPCWSTR FilePath, BYTE FileSha1[20])
 {
 	return GetHashByFilePath(FilePath, CALG_SHA1, FileSha1, sizeof(BYTE) * 20);
 }
@@ -2102,23 +2106,23 @@ CString PathCat(LPCWSTR Path, LPCWSTR Append)
 //}
 
 
-HRESULT CreateFileByData(LPCWSTR FilePath, LPCWSTR lpName, LPCWSTR lpType, HMODULE hModule)
+LSTATUS CreateFileByData(LPCWSTR FilePath, LPCWSTR lpName, LPCWSTR lpType, HMODULE hModule)
 {
 	HRSRC hrsc = FindResource(hModule, lpName, lpType);
 
 	if (!hrsc)
-		return GetLastError();
+		return GetLastError_s();
 
 	HGLOBAL resGlobal = LoadResource(hModule, hrsc);
 
 	if (!resGlobal)
-		return GetLastError();
+		return GetLastError_s();
 
 
 	return CreateFileByData(FilePath, (void*)resGlobal, SizeofResource(hModule, hrsc));
 }
 
-HRESULT CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
+LSTATUS CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 {
 	if (Data == NULL)
 		return ERROR_DATABASE_FULL;
@@ -2130,7 +2134,7 @@ HRESULT CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 		SetFileAttributes(FilePath, FileAttr&(-1 ^ FILE_ATTRIBUTE_READONLY));
 	}
 
-	HRESULT hr = S_OK;
+	LSTATUS lStatus = ERROR_SUCCESS;
 
 	auto thFile = CreateFile(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL| FILE_OPTION, 0);
 
@@ -2138,14 +2142,14 @@ HRESULT CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 	{
 		if (!WriteFile(thFile, Data, ccbData, &ccbData, NULL))
 		{
-			hr = GetLastError();
+			lStatus = GetLastError_s();
 		}
 
 		CloseHandle(thFile);
 	}
 	else
 	{
-		hr = GetLastError();
+		lStatus = GetLastError_s();
 	}
 
 	if (FileAttr != INVALID_FILE_ATTRIBUTES)
@@ -2154,11 +2158,11 @@ HRESULT CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 	}
 
 
-	return hr;
+	return lStatus;
 }
 //#include <unzip.h>
 
-HRESULT CreateFileByZipData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
+LSTATUS CreateFileByZipData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 {
 	auto hZip = OpenZip((void*)Data, ccbData, (char*)NULL);
 
@@ -2166,10 +2170,10 @@ HRESULT CreateFileByZipData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 
 	if (hZip == NULL)
 	{
-		return E_FAIL;
+		return ERROR_BAD_FORMAT;
 	}
 
-	HRESULT hr = E_FAIL;
+	LSTATUS lStatus = ERROR_BAD_FORMAT;
 	CStringA Buffer;
 
 	ZIPENTRY ze;
@@ -2182,20 +2186,20 @@ HRESULT CreateFileByZipData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 		goto End;
 	}
 
-	hr = CreateFileByData(FilePath, Buffer.GetBuffer(), ze.unc_size);
+	lStatus = CreateFileByData(FilePath, Buffer.GetBuffer(), ze.unc_size);
 
 End:
 	CloseZip(hZip);
-	return hr;
+	return lStatus;
 }
 
 //为一个路径创建所有父
-HRESULT CreateRoot(LPCWSTR FilePath)
+LSTATUS CreateRoot(LPCWSTR FilePath)
 {
-	CString Buffer = FilePath;
+	CStringW Buffer = FilePath;
 
 	if (Buffer.GetLength() == 0)
-		return 87;//参数错误
+		return ERROR_INVALID_PARAMETER;
 
 	if (Buffer[Buffer.GetLength() - 1] != L'\\')
 	{
@@ -2204,25 +2208,22 @@ HRESULT CreateRoot(LPCWSTR FilePath)
 
 
 
-	for (auto Path = StrChr(PathSkipRoot(Buffer), L'\\'); Path; Path = StrChr(Path + 1, L'\\'))
+	for (auto Path = StrChrW(PathSkipRoot(Buffer), L'\\'); Path; Path = StrChrW(Path + 1, L'\\'))
 	{
 		*Path = NULL;
 
-		if (!CreateDirectory(Buffer, NULL))
+		if (!CreateDirectoryW(Buffer, NULL))
 		{
-			auto hr = GetLastError();
+			auto lStatus = GetLastError_s();
 
-			if (hr)
-			{
-				if(hr!= ERROR_ALREADY_EXISTS)
-					return hr;
-			}
+			if(lStatus != ERROR_ALREADY_EXISTS)
+				return lStatus;
 		}
 
 		*Path = L'\\';
 	}
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
 #include <ntddvol.h>
@@ -2237,10 +2238,10 @@ HANDLE OpenDriver(LPCWSTR DriverPath, DWORD dwDesiredAccess)
 	if (_RootPath[_RootPath.GetLength() - 1] == L'\\')
 		_RootPath.ReleaseBufferSetLength(_RootPath.GetLength() - 1);
 
-	return CreateFile(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+	return CreateFileW(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
 }
 
-HRESULT GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
+LSTATUS GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
 {
 	DWORD ccbLauout = 0;
 
@@ -2250,27 +2251,32 @@ HRESULT GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
 
 	while (!DeviceIoControl(hDevice, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0, Buffer.GetBuffer(), Buffer.GetAllocLength(), &ccbLauout, NULL))
 	{
-		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		auto lStatus = GetLastError();
+		if (lStatus == ERROR_INSUFFICIENT_BUFFER)
 		{
 			Buffer.GetBuffer(Buffer.GetAllocLength() + sizeof(PARTITION_INFORMATION_EX) * 8);
 		}
+		else if(lStatus!=ERROR_SUCCESS)
+		{
+			return lStatus;
+		}
 		else
 		{
-			return HresultFromBool();
+			return ERROR_FUNCTION_FAILED;
 		}
 	}
 
 	Buffer.ReleaseBufferSetLength(ccbLauout);
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
-HRESULT GetDriverLayout(LPCWSTR DriverPath, CStringA& Buffer)
+LSTATUS GetDriverLayout(LPCWSTR DriverPath, CStringA& Buffer)
 {
 	CHFile hDevice = OpenDriver(DriverPath);
 
 	if (hDevice.IsInvalid())
-		return HresultFromBool();
+		return GetLastError_s();
 
 	return ::GetDriverLayout(hDevice, Buffer);
 }
@@ -2290,19 +2296,19 @@ int GetPartitionDisk(HANDLE hDevice)
 	return PhysicalOffsets.PhysicalOffset->DiskNumber;
 }
 
-HRESULT GetPartitionInfomation(HANDLE hDevice, PARTITION_INFORMATION_EX& PartitionInfo)
+LSTATUS GetPartitionInfomation(HANDLE hDevice, PARTITION_INFORMATION_EX& PartitionInfo)
 {
 	DWORD cbPartitionInfo = 0;
 
 	return DeviceIoControl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &PartitionInfo, sizeof(PARTITION_INFORMATION_EX), &cbPartitionInfo, NULL)
-		? S_OK : GetLastError();
+		? ERROR_SUCCESS : GetLastError_s();
 }
 
 int GetPartition(HANDLE hDevice)
 {
 	PARTITION_INFORMATION_EX PartitionInfo;
 
-	if (GetPartitionInfomation(hDevice, PartitionInfo)!=S_OK)
+	if (GetPartitionInfomation(hDevice, PartitionInfo)!= ERROR_SUCCESS)
 		return -1;
 
 	return PartitionInfo.PartitionNumber;
@@ -2310,7 +2316,7 @@ int GetPartition(HANDLE hDevice)
 
 
 
-HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath)
+LSTATUS GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath)
 {
 	DWORD InputBuffer = 1;
 
@@ -2320,7 +2326,7 @@ HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath)
 
 	if (!DeviceIoControl(hDevice, 0x2D5928, &InputBuffer, sizeof(DWORD), szVHDFilePath, sizeof(szVHDFilePath), &cbRet, NULL))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	if (StrCmpN(szVHDFilePath, L"\\??\\", StaticStrLen(L"\\??\\")) == 0)
@@ -2333,15 +2339,20 @@ HRESULT GetVhdVolumeFilePath(HANDLE hDevice, CString& VHDFilePath)
 	}
 	
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
-HRESULT GetVhdVolumeFilePath(LPCWSTR hDevicePath, CString& VHDFilePath)
+LSTATUS GetVhdVolumeFilePath(LPCWSTR hDevicePath, CString& VHDFilePath)
 {
-	return GetVhdVolumeFilePath(CHFile(OpenDriver(hDevicePath)), VHDFilePath);
+	CHFile hDriver = OpenDriver(hDevicePath);
+
+	if (hDriver.IsInvalid())
+		return GetLastError_s();
+
+	return GetVhdVolumeFilePath(hDriver, VHDFilePath);
 }
 
-HRESULT __fastcall GetDevicePath(const GUID& Guid, std::vector<CString>& pszDevicePath)
+LSTATUS __fastcall GetDevicePath(const GUID& Guid, std::vector<CString>& pszDevicePath)
 {
 	pszDevicePath.clear();
 
@@ -2360,7 +2371,7 @@ HRESULT __fastcall GetDevicePath(const GUID& Guid, std::vector<CString>& pszDevi
 	if (hDevInfoSet == INVALID_HANDLE_VALUE)
 	{
 
-		return HresultFromBool();
+		return GetLastError_s();
 	}
 
 
@@ -2398,10 +2409,10 @@ HRESULT __fastcall GetDevicePath(const GUID& Guid, std::vector<CString>& pszDevi
 
 	SetupDiDestroyDeviceInfoList(hDevInfoSet);
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
-HRESULT GetDiskCount(std::vector<CString>& pszDevicePath)
+LSTATUS GetDiskCount(std::vector<CString>& pszDevicePath)
 {
 	//vector<CString> pszDevicePath;
 
@@ -2627,22 +2638,22 @@ DWORD GetFileArchitecture(LPCWSTR FilePath)
 	}
 }
 
-HRESULT CompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst)
+NTSTATUS CompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst)
 {
 	ULONG CompressBufferWorkSpaceSize = 0;
 	ULONG CompressFragmentWorkSpaceSize = 0;
 
-	auto hr = RtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_LZNT1, &CompressBufferWorkSpaceSize, &CompressFragmentWorkSpaceSize);
+	auto Status = RtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_LZNT1, &CompressBufferWorkSpaceSize, &CompressFragmentWorkSpaceSize);
 
-	if (hr)
-		return hr;
+	if (Status!= STATUS_SUCCESS)
+		return Status;
 
 	CStringA WorkSpaceBuffer;
 
 	return RtlCompressBuffer(COMPRESSION_FORMAT_LZNT1, (PUCHAR)Src, cbSrc, (PUCHAR)Dst, pcbDst ? *pcbDst : 0, 512, pcbDst, WorkSpaceBuffer.GetBuffer(CompressBufferWorkSpaceSize));
 }
 
-HRESULT DecompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst)
+NTSTATUS DecompressBuffer(const void* Src, DWORD cbSrc, void* Dst, DWORD* pcbDst)
 {
 	return RtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, (PUCHAR)Dst, *pcbDst, (PUCHAR)Src, cbSrc, pcbDst);
 }
@@ -2660,7 +2671,7 @@ HRESULT NtPath2DosPath(LPCWSTR NtPath, CString& DosPath)
 	}
 
 	if (!GetVolumePathName(NtPath, DosPath.GetBuffer(MAX_PATH), MAX_PATH))
-		return GetLastError();
+		return HresultFromBool();
 
 	DosPath.ReleaseBuffer();
 
@@ -2678,25 +2689,25 @@ HRESULT NtPath2DosPath(LPCWSTR NtPath, CString& DosPath)
 }
 
 
-HRESULT LoadString(LPCWSTR FilePath, int Index, CString& String)
+BOOL LoadString_s(LPCWSTR FilePath, int Index, CString& String)
 {
 	CHModule pHmodule = LoadLibraryExW(FilePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
 
 	if (pHmodule == INVALID_HANDLE_VALUE)
-		return GetLastError();
+		return FALSE;
 
-	return String.LoadStringW(pHmodule, Index) ? S_OK : E_FAIL;
+	return String.LoadStringW(pHmodule, Index);
 }
 
-HRESULT LoadString(LPCWSTR FilePath, int Index, LPBSTR pString)
+BOOL LoadString_s(LPCWSTR FilePath, int Index, LPBSTR pString)
 {
 	CHModule pHmodule = LoadLibraryExW(FilePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
 
 	if (pHmodule == INVALID_HANDLE_VALUE)
-		return GetLastError();
+		return FALSE;
 
 
-	return CComBSTR::LoadStringResource(pHmodule, Index, *pString) ? S_OK : E_FAIL;
+	return CComBSTR::LoadStringResource(pHmodule, Index, *pString);
 }
 
 
@@ -2812,7 +2823,10 @@ PVOID64 GetProcAddressEx(HANDLE hProc, HMODULE hModule, LPCSTR lpProcName)
 	return NULL;
 }
 
-HRESULT GetLongPathNameW(_In_ LPCTSTR lpszShortPath, _Inout_ CString& lpszLongPath)
+LSTATUS GetLongPathName_s(
+	LPCTSTR lpszShortPath, 
+	CString& lpszLongPath
+	)
 {
 	if (StrCmpN(L"\\\\?\\", lpszShortPath, StaticStrLen(L"\\\\?\\")) == 0)
 	{
@@ -2822,11 +2836,11 @@ HRESULT GetLongPathNameW(_In_ LPCTSTR lpszShortPath, _Inout_ CString& lpszLongPa
 Start:
 
 
-	auto Ret = GetLongPathName(lpszShortPath, lpszLongPath.GetBuffer(), lpszLongPath.GetAllocLength());
+	auto Ret = GetLongPathNameW(lpszShortPath, lpszLongPath.GetBuffer(), lpszLongPath.GetAllocLength());
 
 	if (Ret == 0)
 	{
-		return HRESULT_FROM_WIN32(GetLastError());
+		return GetLastError_s();
 	}
 
 	if (Ret <= lpszLongPath.GetAllocLength())
@@ -2841,7 +2855,7 @@ Start:
 	}
 
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
 
@@ -2870,20 +2884,27 @@ byte Char2Hex(wchar_t ch)
 
 HRESULT HresultFromBool()
 {
-	auto Error = GetLastError();
+	auto lStatus = GetLastError();
 
-	if (Error)
+	if (lStatus)
 	{
-		if (Error & 0xFFFF0000)
-			return Error;
+		if (lStatus & 0xFFFF0000)
+			return lStatus;
 
-		return (Error | (FACILITY_WIN32 << 16) | 0x80000000);
+		return (lStatus | (FACILITY_WIN32 << 16) | 0x80000000);
 	}
 	else
 	{
 		//错误代码为0 转换为非指定的错误
 		return E_FAIL;
 	}
+}
+
+LSTATUS GetLastError_s()
+{
+	auto lStatus = GetLastError();
+
+	return lStatus ? lStatus : ERROR_FUNCTION_FAILED;
 }
 
 int __fastcall StrLen(_In_opt_z_ LPCSTR psz)
@@ -2927,3 +2948,5 @@ UINT64 DirectGetOsVersion()
 
 	return MakeVersion(pPeb->OSMajorVersion, pPeb->OSMinorVersion, pPeb->OSBuildNumber, 0);
 }
+
+#pragma warning(pop)

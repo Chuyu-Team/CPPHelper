@@ -1406,13 +1406,13 @@ namespace rapidxml
 		{
 		}
 
-		HRESULT Load(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > _Str)
+		LSTATUS Load(CStringT< Ch, StrTraitATL< Ch, ChTraitsCRT< Ch > > > _Str)
 		{
 			Str = _Str;
 			return parse<0>((Ch*)Str.GetString());
 		}
 
-		HRESULT ConstLoad(Ch* String)
+		LSTATUS ConstLoad(Ch* String)
 		{
 			return parse<0>(String);
 		}
@@ -1459,12 +1459,12 @@ namespace rapidxml
                 }
 				else
 				{
-					return E_FAIL;
+					return ERROR_BAD_FORMAT;
 					//RAPIDXML_PARSE_ERROR("expected <", text);
 				}
             }
 
-			return S_OK;
+			return ERROR_SUCCESS;
         }
 
         //! Clears the document by deleting all nodes and clearing the memory pool.

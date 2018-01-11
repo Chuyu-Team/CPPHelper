@@ -28,13 +28,13 @@ BOOL IniReadBinaryData(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName, CSt
 	CString Buffer;
 	if (IniReadString(FilePath, KeyPath, ValueName, Buffer) == 0)
 	{
-		return 0;
+		return FALSE;
 	}
 	else
 	{
 		Data = HexString2Binary(Buffer);
 
-		return 1;
+		return TRUE;
 	}
 }
 

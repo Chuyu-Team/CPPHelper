@@ -76,12 +76,12 @@ CStringA Unicode2UTF8(
 	);
 
 CStringA Unicode2UTF8(
-	_In_NLS_string_(cchSrc) LPCWSTR Str,
+	_In_NLS_string_(cStr) LPCWSTR Str,
 	_In_                    DWORD   cStr
 	);
 
 void UTF8ToUnicode(
-	_In_NLS_string_(cSrc) const char* Src,
+	_In_NLS_string_(cchSrc) const char* Src,
 	_In_                  DWORD       cchSrc,
 	_Out_                 CString&    Dest
 	);

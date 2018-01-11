@@ -252,8 +252,8 @@ static FNFCIGETOPENINFO(fnFCIGetOpenInfo)
 
 #define FCICreate2(pErf,ccab) FCICreate(pErf,fnFCIFilePlaced,(PFNALLOC)malloc,(PFNFREE)free,(PFNFCIOPEN)fnFCIFileOpen,(PFNFCIREAD)fnFCIFileRead,(PFNFCIWRITE)fnFCIFileWrite,(PFNFCICLOSE)fnFCIFileClose,(PFNFCISEEK)fnFCIFileSeek,fnFCIFileDelete,fnFCIGetTempFileName,&ccab,NULL)
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabExtractFile(
+_Check_return_
+static LSTATUS CabExtractFile(
 	_In_z_ LPCWSTR CabFilePath,
 	_In_z_ LPCWSTR ExtractPath
 	)
@@ -263,9 +263,9 @@ static HRESULT CabExtractFile(
 	auto hfdi= FDICreate2(&erf);
 
 	if (!hfdi)
-		return E_FAIL;
+		return ERROR_FUNCTION_FAILED;
 
-	HRESULT hr = S_OK;
+	LSTATUS lStatus = ERROR_SUCCESS;
 
 	if (!FDICopy(hfdi, (LPSTR)Unicode2UTF8( CabFilePath).GetString(), "", 0, [](FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION    pfdin)->INT_PTR
 	{
@@ -329,17 +329,17 @@ static HRESULT CabExtractFile(
 
 	}, NULL, (void*)Unicode2UTF8(ExtractPath).GetString()))
 	{
-		hr = E_FAIL;
+		lStatus = ERROR_FUNCTION_FAILED;
 	}
 
 
 	FDIDestroy(hfdi);
 
-	return hr;
+	return lStatus;
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabExtractFile(
+_Check_return_
+static LSTATUS CabExtractFile(
 	_In_z_ LPCSTR CabFilePath,
 	_In_z_ LPCSTR ExtractPath
 	)
@@ -348,8 +348,8 @@ static HRESULT CabExtractFile(
 }
 
 //此接口仅内部调用
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateFileInternal_U(
+_Check_return_
+static LSTATUS CabCreateFileInternal_U(
 	_In_ HFCI     hfci,
 	_In_ int      chRoot,
 	_In_ CStringA FilePath,
@@ -362,7 +362,7 @@ static HRESULT CabCreateFileInternal_U(
 
 	if (hFileFind == INVALID_HANDLE_VALUE)
 		return GetLastError();
-	HRESULT hr = S_OK;
+	LSTATUS lStatus = ERROR_SUCCESS;
 	do
 	{
 		auto TempFileName = FilePath + Unicode2UTF8( FindData.cFileName);
@@ -372,15 +372,15 @@ static HRESULT CabCreateFileInternal_U(
 			if (_IsDots(FindData.cFileName))
 				continue;
 			TempFileName += '\\';
-			hr = CabCreateFileInternal_U(hfci, chRoot, TempFileName, typeCompress);
-			if (hr!=S_OK)
+			lStatus = CabCreateFileInternal_U(hfci, chRoot, TempFileName, typeCompress);
+			if (lStatus != ERROR_SUCCESS)
 				break;
 		}
 		else
 		{
 			if (!FCIAddFile(hfci, TempFileName.GetBuffer(), TempFileName.GetBuffer() + chRoot, FALSE, NULL, fnFCIStatus, fnFCIGetOpenInfo, typeCompress))
 			{
-				hr = E_FAIL;
+				lStatus = ERROR_FUNCTION_FAILED;
 				break;
 			}
 		}
@@ -390,19 +390,19 @@ static HRESULT CabCreateFileInternal_U(
 
 	FindClose(hFileFind);
 
-	return hr;
+	return lStatus;
 }
 
 //将一个文件夹压缩为cab
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateDirectory_U(
+_Check_return_
+static LSTATUS CabCreateDirectory_U(
 	_In_z_ LPCSTR   CabFilePath,
 	_In_   CStringA RootPath,
 	_In_   TCOMP    typeCompress = TCOMPfromLZXWindow(21)
 	)
 {
 	if (RootPath.IsEmpty())
-		return 87;
+		return ERROR_INVALID_PARAMETER;
 
 	if (RootPath[RootPath.GetLength() - 1] != '\\')
 		RootPath += '\\';
@@ -428,16 +428,16 @@ static HRESULT CabCreateDirectory_U(
 
 	if (hfci == NULL)
 	{
-		return erf.erfOper;
+		return ERROR_FUNCTION_FAILED;
 	}
 
-	HRESULT hr = CabCreateFileInternal_U(hfci, RootPath.GetLength(), RootPath, typeCompress);
+	auto lStatus = CabCreateFileInternal_U(hfci, RootPath.GetLength(), RootPath, typeCompress);
 
-	if (hr == S_OK)
+	if (lStatus == ERROR_SUCCESS)
 	{
 		if (!FCIFlushCabinet(hfci, FALSE, NULL, fnFCIStatus))
 		{
-			hr=erf.erfOper;
+			lStatus = ERROR_FUNCTION_FAILED;
 		}
 	}
 
@@ -445,11 +445,11 @@ static HRESULT CabCreateDirectory_U(
 
 
 
-	return hr;
+	return lStatus;
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateDirectory(
+_Check_return_
+static LSTATUS CabCreateDirectory(
 	_In_z_ LPCWSTR CabFilePath,
 	_In_z_ LPCWSTR RootPath,
 	_In_   TCOMP   typeCompress = TCOMPfromLZXWindow(21)
@@ -458,8 +458,8 @@ static HRESULT CabCreateDirectory(
 	return CabCreateDirectory_U(Unicode2UTF8(CabFilePath), Unicode2UTF8(RootPath), typeCompress);
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateDirectory(
+_Check_return_
+static LSTATUS CabCreateDirectory(
 	_In_z_ LPCSTR CabFilePath,
 	_In_z_ LPCSTR RootPath,
 	_In_   TCOMP  typeCompress = TCOMPfromLZXWindow(21)
@@ -468,8 +468,8 @@ static HRESULT CabCreateDirectory(
 	return CabCreateDirectory(CStringW(CabFilePath), CStringW(RootPath), typeCompress);
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateFile(
+_Check_return_
+static LSTATUS CabCreateFile(
 	_In_z_ LPCWSTR CabFilePath,
 	_In_z_ LPCWSTR SourceFile,
 	_In_z_ LPCWSTR FileName,
@@ -499,25 +499,25 @@ static HRESULT CabCreateFile(
 
 	if (hfci == NULL)
 	{
-		return erf.erfOper;
+		return ERROR_FUNCTION_FAILED;
 	}
 
-	//HRESULT hr = CabCreateFileInternal(hfci, RootPath.GetLength(), RootPath, typeCompress);
+	LSTATUS lStatus = ERROR_SUCCESS;
 	if (FCIAddFile(hfci, (LPSTR)Unicode2UTF8(SourceFile).GetString(), (LPSTR)Unicode2UTF8(FileName).GetString(), FALSE, NULL, fnFCIStatus, fnFCIGetOpenInfo, typeCompress))
 	{
-		if (FCIFlushCabinet(hfci, FALSE, NULL, fnFCIStatus))
+		if (!FCIFlushCabinet(hfci, FALSE, NULL, fnFCIStatus))
 		{
-			erf.erfOper = S_OK;
+			lStatus = ERROR_FUNCTION_FAILED;
 		}
 	}
 
 	FCIDestroy(hfci);
 
-	return erf.erfOper;
+	return lStatus;
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateFile(
+_Check_return_
+static LSTATUS CabCreateFile(
 	_In_z_ LPCSTR CabFilePath,
 	_In_z_ LPCSTR SourceFile,
 	_In_z_ LPCSTR FileName,
@@ -527,8 +527,8 @@ static HRESULT CabCreateFile(
 	return CabCreateFile(CStringW(CabFilePath), CStringW(SourceFile), CStringW(FileName), typeCompress);
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateFile(
+_Check_return_
+static LSTATUS CabCreateFile(
 	_In_z_ LPCSTR CabFilePath,
 	_In_z_ LPCSTR SourceFile,
 	_In_   TCOMP  typeCompress = TCOMPfromLZXWindow(21)
@@ -537,8 +537,8 @@ static HRESULT CabCreateFile(
 	return CabCreateFile(CabFilePath, SourceFile,PathFindFileNameA(SourceFile), typeCompress);
 }
 
-_Check_return_ _Success_(return == S_OK)
-static HRESULT CabCreateFile(
+_Check_return_
+static LSTATUS CabCreateFile(
 	_In_z_ LPCWSTR CabFilePath,
 	_In_z_ LPCWSTR SourceFile,
 	_In_   TCOMP   typeCompress = TCOMPfromLZXWindow(21)

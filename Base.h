@@ -80,8 +80,8 @@ LSTATUS RunCmd(
 	_In_opt_   LPVOID UserData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT QuerySymbolicLinkObject(
+_Check_return_  _Success_(return == STATUS_SUCCESS)
+NTSTATUS QuerySymbolicLinkObject(
 	_In_z_ LPCWSTR LinkName,
 	_Out_  CString& LinkTarget
 	);
@@ -99,21 +99,22 @@ HRESULT IsoCreateFileByPath(
 
 #endif
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT Base642Binary(
+_Check_return_
+LSTATUS Base642Binary(
 	_Out_                      CStringA& Binary,
 	_In_NLS_string_(cchString) LPCWSTR Base64String,
 	_In_                       DWORD cchString = -1
 	);
 
-void Binary2Base64(
+_Check_return_
+LSTATUS Binary2Base64(
 	_In_reads_bytes_(ccbSrc) const void* Src,
 	_In_                     DWORD ccbSrc,
 	_Out_                    CString& Base64String
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT Base642Binary(
+_Check_return_
+LSTATUS Base642Binary(
 	_Out_writes_bytes_to_(ccbBinary, ccbBinary) BYTE* pBinary,
 	_Inout_                                     DWORD& ccbBinary,
 	_In_NLS_string_(cchString)                  LPCWSTR Base64String,
@@ -131,14 +132,14 @@ BOOL PathIsSameVolume(
 	_In_z_ LPCWSTR Path2
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT AdjustPrivilege(
+_Check_return_ _Success_(return == STATUS_SUCCESS)
+NTSTATUS AdjustPrivilege(
 	_In_ ULONG Privilege,
 	_In_ BOOL Enable = TRUE
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetHashByFilePath(
+_Check_return_
+LSTATUS GetHashByFilePath(
 	_In_z_                                                 LPCWSTR FilePath,
 	_In_                                                   ALG_ID Algid,
 	_Out_writes_bytes_(cbHashData)                         BYTE* pHashData,
@@ -148,8 +149,8 @@ HRESULT GetHashByFilePath(
 		_When_(Algid == CALG_SHA_256, _In_range_(>= , 32)) DWORD cbHashData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetHashByData(
+_Check_return_
+LSTATUS GetHashByData(
 	_In_reads_bytes_(cbData)                              LPCBYTE pData,
 	_In_                                                  DWORD cbData,
 	_In_                                                  ALG_ID Algid,
@@ -160,21 +161,21 @@ HRESULT GetHashByData(
 		_When_(Algid == CALG_SHA_256, _In_range_(>= , 32)) DWORD cbHashData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetMd5ByFilePath(
+_Check_return_
+LSTATUS GetMd5ByFilePath(
 	_In_z_                 LPCWSTR FilePath,
 	_Out_writes_bytes_(16) BYTE FileMd5[16]
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetMd5ByData(
+_Check_return_
+LSTATUS GetMd5ByData(
 	_In_reads_bytes_(cbData) LPCBYTE pData,
 	_In_                     DWORD   cbData,
 	_Out_writes_bytes_(16)   BYTE    FileMd5[16]
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetSha1ByFilePath(
+_Check_return_
+LSTATUS GetSha1ByFilePath(
 	_In_z_                 LPCWSTR FilePath,
 	_Out_writes_bytes_(20) BYTE    FileSha1[20]
 	);
@@ -192,47 +193,47 @@ CString PathCat(
 
 
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT CreateFileByData(
+_Check_return_
+LSTATUS CreateFileByData(
 	_In_z_ LPCWSTR FilePath,
 	_In_z_ LPCWSTR lpName,
 	_In_z_ LPCWSTR lpType,
 	_In_   HMODULE hModule
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT CreateFileByData(
+_Check_return_
+LSTATUS CreateFileByData(
 	_In_z_                    LPCWSTR     FilePath,
 	_In_reads_bytes_(ccbData) const void* pData,
 	_In_                      DWORD       ccbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT CreateFileByZipData(
+_Check_return_
+LSTATUS CreateFileByZipData(
 	_In_z_                    LPCWSTR     FilePath,
 	_In_reads_bytes_(ccbData) const void* Data,
 	_In_                      DWORD       ccbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT CreateRoot(
+_Check_return_
+LSTATUS CreateRoot(
 	_In_z_ LPCWSTR FilePath
 	);
 
-_Check_return_ _Success_(return == S_OK)
+_Check_return_ _Success_(return != INVALID_HANDLE_VALUE)
 HANDLE OpenDriver(
 	_In_z_ LPCWSTR DriverPath,
 	_In_   DWORD   dwDesiredAccess = GENERIC_READ
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetDriverLayout(
+_Check_return_
+LSTATUS GetDriverLayout(
 	_In_  HANDLE    hDevice,
 	_Out_ CStringA& Buffer/*DRIVE_LAYOUT_INFORMATION_EX+ n * PARTITION_INFORMATION_EX*/
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetDriverLayout(
+_Check_return_
+LSTATUS GetDriverLayout(
 	_In_z_ LPCWSTR DriverPath,
 	_Out_ CStringA& Buffer
 	);
@@ -242,8 +243,8 @@ int GetPartitionDisk(
 	_In_ HANDLE hDevice
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetPartitionInfomation(
+_Check_return_
+LSTATUS GetPartitionInfomation(
 	_In_  HANDLE                    hDevice,
 	_Out_ PARTITION_INFORMATION_EX& PartitionInfo
 	);
@@ -253,20 +254,20 @@ int GetPartition(
 	_In_ HANDLE hDevice
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetVhdVolumeFilePath(
+_Check_return_
+LSTATUS GetVhdVolumeFilePath(
 	_In_  HANDLE   hDevice,
 	_Out_ CString& VHDFilePath
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetVhdVolumeFilePath(
+_Check_return_
+LSTATUS GetVhdVolumeFilePath(
 	_In_z_ LPCWSTR  hDevicePath,
 	_Out_  CString& VHDFilePath
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetDiskCount(
+_Check_return_
+LSTATUS GetDiskCount(
 	_Out_ std::vector<CString>& pszDevicePath
 	);
 
@@ -282,20 +283,20 @@ bool IsProcExists(
 	_In_z_ LPCSTR ProcName
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT CompressBuffer(
-	_In_reads_bytes_(cbSrc)     const void* Src,
-	_In_                        DWORD       cbSrc,
-	_Out_writes_bytes_(*pcbDst) void*       Dst,
-	_Inout_                     DWORD*      pcbDst
+_Check_return_ _Success_(return == 0)
+NTSTATUS CompressBuffer(
+	_In_reads_bytes_(cbSrc)                 const void* Src,
+	_In_                                    DWORD       cbSrc,
+	_Out_writes_bytes_to_(*pcbDst, *pcbDst) void*       Dst,
+	_Inout_                                 DWORD*      pcbDst
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT DecompressBuffer(
-	_In_reads_bytes_(cbSrc)     const void* Src,
-	_In_                        DWORD       cbSrc,
-	_Out_writes_bytes_(*pcbDst) void*       Dst,
-	_Inout_                     DWORD*      pcbDst
+_Check_return_ _Success_(return == 0)
+NTSTATUS DecompressBuffer(
+	_In_reads_bytes_(cbSrc)                 const void* Src,
+	_In_                                    DWORD       cbSrc,
+	_Out_writes_bytes_to_(*pcbDst, *pcbDst) void*       Dst,
+	_Inout_                                 DWORD*      pcbDst
 	);
 
 _Check_return_ _Success_(return == S_OK)
@@ -304,15 +305,15 @@ HRESULT NtPath2DosPath(
 	_Out_  CString& DosPath
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT LoadString(
-	_In_z_ LPCWSTR  FilePath,
-	_In_   int      Index,
-	_Out_  CString& String
+_Check_return_ _Success_(return)
+BOOL LoadString_s(
+	_In_z_ LPCWSTR   FilePath,
+	_In_   int       Index,
+	_Out_  CStringW& String
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT LoadString(
+_Check_return_ _Success_(return)
+BOOL LoadString_s(
 	_In_z_            LPCWSTR FilePath,
 	_In_              int     Index,
 	_Outptr_result_z_ LPBSTR  pString
@@ -338,8 +339,8 @@ PVOID64 GetProcAddressEx(
 	);
 
 //GetLongPathName的安全封装
-_Check_return_ _Success_(return == S_OK)
-HRESULT GetLongPathNameW(
+_Check_return_
+LSTATUS GetLongPathName_s(
 	_In_ LPCTSTR   lpszShortPath,
 	_Out_ CString& lpszLongPath
 	);
@@ -369,6 +370,9 @@ CStringA HexString2Binary(
 
 
 HRESULT HresultFromBool();
+
+//安全版GetLastError，必定返回一个错误代码。
+LSTATUS GetLastError_s();
 
 //检测是否是兼容模式
 _Check_return_

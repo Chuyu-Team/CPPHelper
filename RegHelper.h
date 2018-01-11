@@ -3,8 +3,8 @@
 #include <atlstr.h>
 
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_                                          HKEY    hKey,
 	_In_opt_z_                                    LPCWSTR ValueName,
 	_Out_opt_                                     LPDWORD pType,
@@ -12,31 +12,31 @@ HRESULT RegGetData(
 	_Inout_                                       LPDWORD pcbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_                           HKEY    hKey,
 	_In_opt_z_                     LPCWSTR ValueName,
 	_Out_opt_                      LPDWORD pType,
-	_Out_writes_bytes_opt_(cbData) void*   pData,
+	_Out_writes_bytes_all_opt_(cbData) void*   pData,
 	_In_                           DWORD   cbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_              HKEY    hKey,
 	_In_opt_z_        LPCWSTR ValueName,
 	_Outptr_result_z_ LPBSTR  pString
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY     hKey,
 	_In_opt_z_ LPCWSTR  ValueName,
 	_Out_      CString& Str
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_                                          HKEY    hKey,
 	_In_z_                                        LPCWSTR SubKeyPath,
 	_In_opt_z_                                    LPCWSTR ValueName,
@@ -45,16 +45,16 @@ HRESULT RegGetData(
 	_Inout_                                       LPDWORD pcbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_              HKEY    hKey,
 	_In_z_            LPCWSTR SubKeyPath,
 	_In_opt_z_        LPCWSTR ValueName,
 	_Outptr_result_z_ BSTR*   Str
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY     hKey,
 	_In_z_     LPCWSTR  SubKeyPath,
 	_In_opt_z_ LPCWSTR  ValueName,
@@ -63,16 +63,16 @@ HRESULT RegGetData(
 
 //HRESULT RegGetData(HKEY hKey, LPCWSTR SubKeyPath, LPCWSTR ValueName, DWORD* pType, void* pData, DWORD cbData);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY      hKey,
 	_In_opt_z_ LPCWSTR   ValueName,
 	_Out_opt_  DWORD*    pType,
 	_Out_      CStringA& Data
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY      hKey,
 	_In_z_     LPCWSTR   SubKeyPath,
 	_In_opt_z_ LPCWSTR   ValueName,
@@ -80,44 +80,44 @@ HRESULT RegGetData(
 	_Out_      CStringA& Data
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY    hKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_Out_      LPDWORD pData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY    hKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_Out_      PUINT64 pData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegGetData(
+_Check_return_
+LSTATUS RegGetData(
 	_In_       HKEY    hKey,
 	_In_z_     LPCWSTR SubKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_Out_      LPDWORD pData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_       HKEY hKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_In_       DWORD Data
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_       HKEY    hKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_In_       UINT64  Data
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_                     HKEY        hKey,
 	_In_opt_z_               LPCWSTR     ValueName,
 	_In_                     DWORD       Type,
@@ -125,15 +125,15 @@ HRESULT RegSetData(
 	_In_                     DWORD       cbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_       HKEY    hKey,
 	_In_opt_z_ LPCWSTR ValueName,
 	_In_z_     LPCWSTR String
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_                     HKEY        hKey,
 	_In_z_                   LPCWSTR     SubKeyPath,
 	_In_opt_z_               LPCWSTR     ValueName,
@@ -142,16 +142,16 @@ HRESULT RegSetData(
 	_In_                     DWORD       cbData
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_       HKEY    hKey,
 	_In_z_     LPCWSTR SubKeyPath,
 	_In_opt_z_ LPCWSTR ValueName,
 	_In_       DWORD   Data
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegSetData(
+_Check_return_
+LSTATUS RegSetData(
 	_In_       HKEY    hKey,
 	_In_z_     LPCWSTR SubKeyPath,
 	_In_opt_z_ LPCWSTR ValueName,
@@ -159,44 +159,44 @@ HRESULT RegSetData(
 	);
 
 //仅清空Key，但是不删除Key本身
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegDeleteKey2(
+_Check_return_
+LSTATUS RegDeleteKey2(
 	_In_ HKEY hKey
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegDeleteTree2(
+_Check_return_
+LSTATUS RegDeleteTree2(
 	_In_   HKEY    hRootKey,
 	_In_z_ LPCWSTR szSubKeyName
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegDeleteTree2(
+_Check_return_
+LSTATUS RegDeleteTree2(
 	_In_ HKEY hKey
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegCopyTree2(
+_Check_return_
+LSTATUS RegCopyTree2(
 	_In_ HKEY hSrc,
 	_In_ HKEY hDst
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegCopyTree2(
+_Check_return_
+LSTATUS RegCopyTree2(
 	_In_   HKEY    hSrc,
 	_In_z_ LPCWSTR SrcSubKey,
 	_In_   HKEY    hDst,
 	_In_z_ LPCWSTR DstSubKey
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegDeleteLink(
+_Check_return_
+LSTATUS RegDeleteLink(
 	_In_   HKEY    hKey,
 	_In_z_ LPCWSTR DesPath
 	);
 
-_Check_return_ _Success_(return == S_OK)
-HRESULT RegCreateLink(
+_Check_return_
+LSTATUS RegCreateLink(
 	_In_   HKEY    hKey,
 	_In_z_ LPCWSTR DesPath,
 	_In_z_ LPCWSTR SrcPath

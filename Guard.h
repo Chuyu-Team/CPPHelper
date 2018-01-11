@@ -16,12 +16,16 @@
 #include <atltime.h>
 #endif
 
-static HRESULT CreateDumpFile(LPCWSTR lpstrDumpFilePathName, EXCEPTION_POINTERS *pException, MINIDUMP_TYPE DumpType)
+static HRESULT CreateDumpFile(
+	_In_z_     LPCWSTR             lpstrDumpFilePathName,
+	_In_opt_ EXCEPTION_POINTERS* pException,
+	_In_       MINIDUMP_TYPE       DumpType
+	)
 {
 	HANDLE hDumpFile = CreateFile(lpstrDumpFilePathName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hDumpFile == INVALID_HANDLE_VALUE)
-		return GetLastError();
+		return HresultFromBool();
 	// Dump信息  
 
 	MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
@@ -30,11 +34,11 @@ static HRESULT CreateDumpFile(LPCWSTR lpstrDumpFilePathName, EXCEPTION_POINTERS 
 	dumpInfo.ClientPointers = TRUE;
 
 	// 写入Dump文件内容  
-	MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile, DumpType, &dumpInfo, NULL, NULL);
+	auto bRet = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile, DumpType, &dumpInfo, NULL, NULL);
 
 	CloseHandle(hDumpFile);
 
-	return S_OK;
+	return bRet ? S_OK : HresultFromBool();
 }
 
 #if _MSC_VER > 1500

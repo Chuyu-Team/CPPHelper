@@ -6,6 +6,8 @@
 #pragma comment (lib,"Version.lib")
 #pragma comment (lib,"KtmW32.lib")
 
+#pragma warning(push)
+#pragma warning(disable: 28251)
 
 bool __fastcall IsDots(LPCWSTR FileName, DWORD cbFileName)
 {
@@ -333,7 +335,7 @@ UINT64 GetDirectorySize(LPCWSTR FilePath)
 //可以压缩一个文件/文件夹
 HRESULT CompressFile(LPCWSTR FilePath)
 {
-	HRESULT hr = 0;
+	LSTATUS lSataus = ERROR_SUCCESS;
 	USHORT Type = COMPRESSION_FORMAT_XPRESS_HUFF; //设置为极限压缩
 	DWORD BytesReturned;
 
@@ -353,7 +355,7 @@ HRESULT CompressFile(LPCWSTR FilePath)
 		{
 			if (DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &Type, sizeof(Type), 0, 0, &BytesReturned, 0) == FALSE)
 			{
-				hr = GetLastError();
+				lSataus = GetLastError_s();
 			}
 		}
 
@@ -362,11 +364,11 @@ HRESULT CompressFile(LPCWSTR FilePath)
 
 		CloseHandle(hFile);
 
-		return hr;
+		return lSataus;
 	}
 	else
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 
@@ -605,14 +607,14 @@ Error2:
 	return Status;
 }
 
-HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
+LSTATUS UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 {
 	if (GetFileType(lpNewFileName) != PathIsDir)
 	{
 		return ERROR_FILE_NOT_FOUND;
 	}
 
-	HRESULT hr = ERROR_FILE_NOT_FOUND;
+	LSTATUS lStatus = ERROR_FILE_NOT_FOUND;
 	CString NewFile, OldFile;
 
 	WIN32_FIND_DATAW FindFileData = {};
@@ -627,10 +629,10 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 			{
 				if (_IsDots(FindFileData.cFileName) == 0)
 				{
-					auto thr = UpdateFile(lpExistingFileName + FindFileData.cFileName + L"\\", lpNewFileName + FindFileData.cFileName + L"\\");
-					if (thr!=S_OK)
+					auto lStatusTmp = UpdateFile(lpExistingFileName + FindFileData.cFileName + L"\\", lpNewFileName + FindFileData.cFileName + L"\\");
+					if (lStatusTmp)
 					{
-						hr = thr;
+						lStatus = lStatusTmp;
 					}
 				}
 			}
@@ -647,13 +649,13 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 				//先检查文件是否为同一个文件
 				if (auto Status = GetFileId(NewFile, NULL, &IdNew))
 				{
-					hr = RtlNtStatusToDosError(Status);
+					lStatus = RtlNtStatusToDosError(Status);
 					continue;
 				}
 
 				if (auto Status = GetFileId(OldFile, NULL, &IdOld))
 				{
-					hr = RtlNtStatusToDosError(Status);
+					lStatus = RtlNtStatusToDosError(Status);
 					continue;
 				}
 
@@ -663,7 +665,7 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 					{
 						if (!MoveFileEx(NewFile, OldFile, MOVEFILE_CREATE_HARDLINK | MOVEFILE_REPLACE_EXISTING))
 						{
-							hr = GetLastError();
+							lStatus = GetLastError_s();
 						}
 					}
 					else
@@ -672,19 +674,19 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 						auto hTransaction = CreateTransaction(NULL, 0, 0, 0, 0, INFINITE, nullptr);
 						if (hTransaction == INVALID_HANDLE_VALUE)
 						{
-							hr = GetLastError();
+							lStatus = GetLastError_s();
 						}
 						else
 						{
 							if (DeleteFileTransactedW(OldFile, hTransaction)==FALSE || CreateHardLinkTransactedW(OldFile, NewFile,nullptr, hTransaction)==FALSE)
 							{
-								hr = GetLastError();
+								lStatus = GetLastError_s();
 							}
 							else
 							{
 								if (!CommitTransactionAsync(hTransaction))
 								{
-									hr = GetLastError();
+									lStatus = GetLastError_s();
 								}
 							}
 							CloseHandle(hTransaction);
@@ -703,7 +705,7 @@ HRESULT UpdateFile(CString lpExistingFileName, CString lpNewFileName)
 		FindClose(hFindFile);
 	}
 
-	return hr;
+	return lStatus;
 }
 
 NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBUTES NewDirectoryPath)
@@ -773,7 +775,7 @@ NTSTATUS NtCopyDirectory(OBJECT_ATTRIBUTES ExistingDirectoryPath, OBJECT_ATTRIBU
 				{
 					if (!ReadFile(hExistingFile, FileBuffer, sizeof(FileBuffer), &cbData, NULL))
 					{
-						Status = GetLastError();
+						Status = GetLastError_s();
 						break;
 					}
 
@@ -836,7 +838,7 @@ NTSTATUS CopyDirectory(LPCWSTR ExistingDirectoryPath, LPCWSTR NewDirectoryInfoPa
 	return Status;
 }
 
-HRESULT MoveDirectory(CString ExistingDirectoryPath, CString NewDirectoryInfoPath)
+int MoveDirectory(CString ExistingDirectoryPath, CString NewDirectoryInfoPath)
 {
 	if (ExistingDirectoryPath[ExistingDirectoryPath.GetLength() - 1] == L'\\')
 		ExistingDirectoryPath.ReleaseBufferSetLength(ExistingDirectoryPath.GetLength() - 1);
@@ -856,19 +858,19 @@ HRESULT MoveDirectory(CString ExistingDirectoryPath, CString NewDirectoryInfoPat
 }
 
 
-HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
+LSTATUS GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
 {
 	HRSRC hRsrcVersion = FindResourceExW(hFileMoudle, RT_VERSION, MAKEINTRESOURCE(1), wLanguage);
 
 	if (hRsrcVersion == NULL)
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	HGLOBAL hGlobal = LoadResource(hFileMoudle, hRsrcVersion);
 	if (hGlobal == NULL)
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	VS_FIXEDFILEINFO* pFileInfo = NULL;
@@ -877,7 +879,7 @@ HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
 
 	if (!VerQueryValue(hGlobal, L"\\", (LPVOID*)&pFileInfo, &uLen))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 #else
 	//XP系统不允许直接调用，需要先复制到一个内存块
@@ -889,7 +891,7 @@ HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
 
 	if (!VerQueryValue(pData, L"\\", (LPVOID*)&pFileInfo, &uLen))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 #endif
@@ -898,15 +900,15 @@ HRESULT GetFileVersion(HMODULE hFileMoudle, UINT16 Version[4], WORD wLanguage)
 	*((DWORD*)Version) = pFileInfo->dwFileVersionLS;
 	((DWORD*)Version)[1] = pFileInfo->dwFileVersionMS;
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
 //获得文件版本号
-HRESULT GetFileVersion(LPCWSTR FilePath, UINT16 Version[4], WORD wLanguage)
+LSTATUS GetFileVersion(LPCWSTR FilePath, UINT16 Version[4], WORD wLanguage)
 {
 	CHModule hFileMoudle = LoadLibraryEx(FilePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
 
-	return hFileMoudle.IsInvalid() ? GetLastError() : GetFileVersion(hFileMoudle, Version, wLanguage);
+	return hFileMoudle.IsInvalid() ? GetLastError_s() : GetFileVersion(hFileMoudle, Version, wLanguage);
 }
 
 
@@ -994,18 +996,18 @@ UINT64 GetDirectoryAllocationSize(LPCWSTR FileName, std::map<UINT64, DWORD>& Fil
 	return Space;
 }
 
-HRESULT CrateDirectorHandLink(CString To, CString From)
+LSTATUS CrateDirectorHandLink(CString To, CString From)
 {
 	WIN32_FIND_DATAW FindFileData;
 	CHFileFind hFileFind = FindFirstFileW(From + L"*", &FindFileData);
 
 	if (hFileFind == INVALID_HANDLE_VALUE)
-		return GetLastError();
+		return GetLastError_s();
 
 
 	if (!GetFileType(To) && !CreateDirectory(To, NULL))
 	{
-		return GetLastError();
+		return GetLastError_s();
 	}
 
 	do
@@ -1014,10 +1016,10 @@ HRESULT CrateDirectorHandLink(CString To, CString From)
 		{
 			if (_IsDots(FindFileData.cFileName) == 0)
 			{
-				HRESULT hr = CrateDirectorHandLink(To + FindFileData.cFileName + L"\\", From + FindFileData.cFileName + L"\\");
+				auto lStatus = CrateDirectorHandLink(To + FindFileData.cFileName + L"\\", From + FindFileData.cFileName + L"\\");
 
-				if (hr!=S_OK)
-					return hr;
+				if (lStatus)
+					return lStatus;
 			}
 		}
 		else
@@ -1025,14 +1027,14 @@ HRESULT CrateDirectorHandLink(CString To, CString From)
 
 			if (MoveFileExW(From + FindFileData.cFileName, To + FindFileData.cFileName, MOVEFILE_CREATE_HARDLINK) == FALSE)
 			{
-				return GetLastError();
+				return GetLastError_s();
 			}
 		}
 
 
 	} while (FindNextFile(hFileFind, &FindFileData));
 
-	return S_OK;
+	return ERROR_SUCCESS;
 }
 
 FilePathType GetFileType(LPCWSTR FilePath)
@@ -1092,3 +1094,5 @@ FilePathType GetFileType(LPCSTR FilePath)
 {
 	return GetFileType(CStringW(FilePath));
 }
+
+#pragma warning(pop)
