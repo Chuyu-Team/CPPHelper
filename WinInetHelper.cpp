@@ -306,7 +306,7 @@ Start:
 
 			if (--TryCount)
 			{
-			Restart:
+				Sleep(1000);
 
 				hr = Info.InternetOpenW();
 
@@ -347,6 +347,7 @@ Start:
 				{
 				case HTTP_STATUS_PARTIAL_CONTENT:
 					//支持断点续传
+					continue;
 					break;
 				case HTTP_STATUS_RESET_CONTENT:
 					//不支持断点续传
@@ -356,11 +357,7 @@ Start:
 				case 0:
 					return E_FAIL;
 				case HTTP_STATUS_NOT_FOUND:
-					if (TryCount--)
-					{
-						Sleep(1000);
-						goto Restart;
-					}
+					goto Error;
 				default:
 					return Status;
 					break;
@@ -370,7 +367,6 @@ Start:
 			{
 				return HresultFromBool();
 			}
-			break;
 		}
 
 
@@ -384,7 +380,7 @@ Start:
 				//pStream->put_Size(0);
 
 				//意外的网络错误
-				return 59;
+				return __HRESULT_FROM_WIN32(ERROR_UNEXP_NET_ERR);
 			}
 
 			goto Error;
