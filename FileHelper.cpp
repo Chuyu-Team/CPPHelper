@@ -39,7 +39,9 @@ NTSTATUS __fastcall GetFileId(LPCWSTR FilePath, FILE_STANDARD_INFORMATION* pFile
 
 	if (!RtlDosPathNameToNtPathName_U(FilePath, &usFileName, NULL, NULL))
 	{
-		return RtlGetLastNtStatus();
+		auto Status = RtlGetLastNtStatus();
+
+		return Status ? Status : STATUS_INVALID_PARAMETER;
 	}
 
 	OBJECT_ATTRIBUTES ObjectAttributes = { sizeof(OBJECT_ATTRIBUTES), NULL, &usFileName, OBJ_CASE_INSENSITIVE };

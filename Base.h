@@ -90,11 +90,11 @@ NTSTATUS QuerySymbolicLinkObject(
 
 _Check_return_ _Success_(return == S_OK)
 HRESULT IsoCreateFileByPath(
-	_In_z_   LPCWSTR pIsoPath,
-	_In_z_   LPCWSTR pSrcDir,
-	_In_z_   LPCWSTR VolumeName,
-	_In_opt_ BaseCallBack callBack,
-	_In_opt_ LPVOID pUserData
+	_In_z_     LPCWSTR pIsoPath,
+	_In_z_     LPCWSTR pSrcDir,
+	_In_opt_z_ LPCWSTR VolumeName,
+	_In_opt_   BaseCallBack callBack,
+	_In_opt_   LPVOID pUserData
 	);
 
 #endif
@@ -372,10 +372,11 @@ CStringA HexString2Binary(
 HRESULT HresultFromBool();
 
 //安全版GetLastError，必定返回一个错误代码。
+_Ret_
 LSTATUS GetLastError_s();
 
 //检测是否是兼容模式
-_Check_return_
+_Check_return_ _Success_(return !=-1)
 BOOL IsCompatibilityMode();
 
 //获取2位小版本号，比如6.1

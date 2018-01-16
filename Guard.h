@@ -15,6 +15,7 @@
 #include <atlstr.h>
 #include <atltime.h>
 #endif
+#include "BaseFunction.h"
 
 static HRESULT CreateDumpFile(
 	_In_z_     LPCWSTR             lpstrDumpFilePathName,

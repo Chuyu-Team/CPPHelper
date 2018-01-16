@@ -138,6 +138,10 @@ public:
 		_COM_Outptr_ IUnknown** ppUnk
 		)
 	{
+		if (ppUnk == NULL)
+			return E_POINTER;
+
+		*ppUnk = nullptr;
 		return E_NOINTERFACE;
 	}
 };

@@ -2,6 +2,7 @@
 #include "Base.h"
 #include "ComHelper.h"
 #include <setupapi.h>
+#include <ntstatus.h>
 #pragma comment(lib,"setupapi.lib")
 
 #pragma warning(push)
@@ -2923,6 +2924,7 @@ BOOL IsCompatibilityMode()
 {
 	OSVERSIONINFOW VersionInformation = { sizeof(VersionInformation) };
 
+	#pragma warning(suppress:28159)
 	if (!GetVersionExW(&VersionInformation))
 	{
 		return -1;
