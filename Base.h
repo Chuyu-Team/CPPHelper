@@ -384,3 +384,7 @@ DWORD DirectGetOsMinVersion();
 
 //获取3位版本号，最后一位必定为0，比如6.1.7601.0
 UINT64 DirectGetOsVersion();
+
+//LocalFree释放空间
+_Check_return_
+_CRTALLOCATOR LPCWSTR __cdecl FormatLongString(_In_z_ LPCWSTR _Format, ...);

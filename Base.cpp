@@ -2951,4 +2951,17 @@ UINT64 DirectGetOsVersion()
 	return MakeVersion(pPeb->OSMajorVersion, pPeb->OSMinorVersion, pPeb->OSBuildNumber, 0);
 }
 
+LPCWSTR __cdecl FormatLongString(LPCWSTR _Format, ...)
+{
+	LPCWSTR pBuffer;
+	va_list _ArgList;
+	__crt_va_start(_ArgList, _Format);
+
+	auto cBuffer = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING, _Format, 0, 0, (LPWSTR)&pBuffer, 0, &_ArgList);
+
+	__crt_va_end(_ArgList);
+
+	return cBuffer ? pBuffer : nullptr;
+}
+
 #pragma warning(pop)
