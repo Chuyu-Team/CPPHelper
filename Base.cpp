@@ -1772,6 +1772,8 @@ LSTATUS Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String)
 	}
 
 	Base64String.ReleaseBufferSetLength(Dst);
+
+	return ERROR_SUCCESS;
 }
 
 LSTATUS Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWORD cchString)
@@ -2825,40 +2827,80 @@ PVOID64 GetProcAddressEx(HANDLE hProc, HMODULE hModule, LPCSTR lpProcName)
 }
 
 LSTATUS GetLongPathName_s(
-	LPCTSTR lpszShortPath, 
-	CString& lpszLongPath
+	LPCWSTR   lpszShortPath, 
+	CStringW& lpszLongPath
 	)
 {
-	if (StrCmpN(L"\\\\?\\", lpszShortPath, StaticStrLen(L"\\\\?\\")) == 0)
+	if (StrCmpNW(L"\\\\?\\", lpszShortPath, StaticStrLen(L"\\\\?\\")) == 0)
 	{
 		lpszShortPath += StaticStrLen(L"\\\\?\\");
 	}
-	lpszLongPath.GetBuffer(MAX_PATH);
-Start:
+	
+	CStringW Buffer;
 
-
-	auto Ret = GetLongPathNameW(lpszShortPath, lpszLongPath.GetBuffer(), lpszLongPath.GetAllocLength());
-
-	if (Ret == 0)
+	DWORD cBufferUsed = MAX_PATH;
+	for (;;)
 	{
-		return GetLastError_s();
+		auto pBuffer = Buffer.GetBuffer(cBufferUsed);
+		auto cBuffer = Buffer.GetAllocLength();
+
+		cBufferUsed = GetLongPathNameW(lpszShortPath, pBuffer, cBuffer);
+
+		if (cBufferUsed == 0)
+		{
+			return GetLastError_s();
+		}
+		else if (cBufferUsed <= cBuffer)
+		{
+			Buffer.ReleaseBufferSetLength(cBufferUsed);
+
+			lpszLongPath = Buffer;
+
+			return ERROR_SUCCESS;
+		}
+		else
+		{
+			//缓冲区不足
+		}
 	}
 
-	if (Ret <= lpszLongPath.GetAllocLength())
-	{
-		lpszLongPath.ReleaseBufferSetLength(Ret);
-	}
-	else
-	{
-		lpszLongPath.GetBuffer(Ret);
 
-		goto Start;
-	}
-
-
-	return ERROR_SUCCESS;
 }
 
+LSTATUS __fastcall ExpandEnvironmentStrings_s(
+    LPCWSTR   lpszShortPath,
+    CStringW& lpszLongPath
+    )
+{
+	CStringW Buffer;
+
+	DWORD cBufferUsed = MAX_PATH;
+
+	for (;;)
+	{
+		auto pBuffer = Buffer.GetBuffer(cBufferUsed);
+
+		auto cBuffer = Buffer.GetAllocLength();
+
+		cBufferUsed = ExpandEnvironmentStringsW(lpszShortPath, pBuffer, cBuffer);
+
+		if (cBufferUsed == 0)
+		{
+			return GetLastError_s();
+		}
+		else if (cBufferUsed <= cBuffer)
+		{
+			Buffer.ReleaseBufferSetLength(cBufferUsed - 1);
+			lpszLongPath = Buffer;
+
+			return ERROR_SUCCESS;
+		}
+		else
+		{
+			//缓冲区不足
+		}
+	}
+}
 
 byte Char2Hex(wchar_t ch)
 {

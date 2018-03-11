@@ -338,13 +338,19 @@ PVOID64 GetProcAddressEx(
 	_In_z_ LPCSTR  lpProcName
 	);
 
-//GetLongPathName的安全封装
+//GetLongPathNameW的安全封装
 _Check_return_
 LSTATUS GetLongPathName_s(
-	_In_ LPCTSTR   lpszShortPath,
-	_Out_ CString& lpszLongPath
+	_In_  LPCWSTR   lpszShortPath,
+	_Out_ CStringW& lpszLongPath
 	);
 
+//ExpandEnvironmentStringsW的安全封装
+_Check_return_
+LSTATUS __fastcall  ExpandEnvironmentStrings_s(
+    _In_  LPCWSTR   lpszShortPath,
+    _Out_ CStringW& lpszLongPath
+    );
 
 //IsReparseTagNameSurrogate可以使用此函数代替下面函数功能
 //bool IsSimpleReparesPoint(DWORD dwReserved0);
