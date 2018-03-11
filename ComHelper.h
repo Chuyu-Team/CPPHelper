@@ -1,7 +1,7 @@
 #pragma once
 
 #include <comdef.h>
-#include <atlcom.h>
+#include <Unknwn.h>
 #include <vector>
 
 ///////////////////////////////////////////////////
