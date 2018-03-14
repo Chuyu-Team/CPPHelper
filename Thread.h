@@ -91,55 +91,29 @@ public:
 class CATLThreadPoolWorker
 {
 public:
-	_beginthreadex_proc_type Call;
-	void* UserData;
+	std::function<void()> Call;
 
 	HANDLE hWorkEvent;
 
 	volatile LONG Count;
 	BOOL bCancelled;
-	CATLThreadPoolWorker(_beginthreadex_proc_type _Call, void* _UserData)
-		: Call(_Call)
-		, UserData(_UserData)
-		, Count(0)
-		, bCancelled(FALSE)
-		, hWorkEvent(CreateEvent(NULL,TRUE,TRUE,NULL))
-	{
-	}
+
 
 	template<class _Ptr>
 	//dwCreationFlags请参考CreateThread
 	CATLThreadPoolWorker(_Ptr&& _ptr)
-		:CATLThreadPoolWorker(
-			[](void * UserData) ->unsigned
-			{
-				auto Ptr = (_Ptr*)UserData;
-
-
-				(*Ptr)();
-
-				return 0;
-
-			},
-			&_ptr)
+		: Call(std::move(_ptr))
+		, Count(0)
+		, bCancelled(FALSE)
+		, hWorkEvent(CreateEvent(NULL, TRUE, TRUE, NULL))
 	{
-		Call=[](void * UserData) ->unsigned
-		{
-			auto Ptr = (_Ptr*)UserData;
-
-
-			(*Ptr)();
-
-			return 0;
-
-		};
 	}
 
 	//开始执行任务
 	void John()
 	{
 		if(!bCancelled)
-			Call(UserData);
+			Call();
 
 		Release();
 	}
