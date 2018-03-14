@@ -433,7 +433,7 @@ LSTATUS RegCopyTree2(HKEY hSrc, HKEY hDst)
 
 		auto Error = RegEnumValueW(hSrc, ValueSize, pValueName, &cchValueName, NULL, &Type, (LPBYTE)pBuffer, &ccbData);
 
-		if (Error)
+		if (Error == ERROR_SUCCESS)
 		{
 			Error = RegSetData(hDst, pValueName, Type, pBuffer, ccbData);
 		}
@@ -449,7 +449,7 @@ LSTATUS RegCopyTree2(HKEY hSrc, HKEY hDst)
 	{
 		auto Error = RegEnumKeyW(hSrc, KeySize, pValueName, MaxRegValueName);
 
-		if (Error)
+		if (Error == ERROR_SUCCESS)
 		{
 			Error = RegCopyTree2(hSrc, pValueName, hDst, pValueName);
 		}
