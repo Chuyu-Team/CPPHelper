@@ -3,8 +3,13 @@
 #ifndef SDK_KM_H
 #define SDK_KM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMDF_USING_NTSTATUS
-#include <minwindef.h>
+#include <ntstatus.h>
+#include <Windows.h>
 #include <winnt.h>
 
 #pragma comment(lib,"ntdll.lib")
@@ -125,6 +130,7 @@ typedef enum _FIRMWARE_TYPE {
 
 typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS *PNTSTATUS;
+typedef ULONG LOGICAL;
 
 typedef struct _UNICODE_STRING {
 	USHORT Length;
@@ -635,6 +641,32 @@ typedef struct _PEB
 	LIST_ENTRY TppWorkerpList;
 	PVOID WaitOnAddressHashTable[128];
 } PEB, *PPEB;
+
+typedef
+_Function_class_(RTL_HEAP_COMMIT_ROUTINE)
+_IRQL_requires_same_
+NTSTATUS
+NTAPI
+RTL_HEAP_COMMIT_ROUTINE(
+    _In_ PVOID Base,
+    _Inout_ PVOID *CommitAddress,
+    _Inout_ PSIZE_T CommitSize
+    );
+typedef RTL_HEAP_COMMIT_ROUTINE *PRTL_HEAP_COMMIT_ROUTINE;
+
+typedef struct _RTL_HEAP_PARAMETERS {
+    ULONG Length;
+    SIZE_T SegmentReserve;
+    SIZE_T SegmentCommit;
+    SIZE_T DeCommitFreeBlockThreshold;
+    SIZE_T DeCommitTotalFreeThreshold;
+    SIZE_T MaximumAllocationSize;
+    SIZE_T VirtualMemoryThreshold;
+    SIZE_T InitialCommit;
+    SIZE_T InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+    SIZE_T Reserved[ 2 ];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
 
 
 typedef enum _LPC_TYPE {
@@ -1318,9 +1350,6 @@ typedef struct _FILE_FS_OBJECTID_INFORMATION {
 
 typedef void (NTAPI *PIO_APC_ROUTINE)(PVOID, PIO_STATUS_BLOCK, ULONG);
 
-extern "C"
-{
-
 	NTSYSAPI NTSTATUS NTAPI NtCreateFile(
 		_Out_     PHANDLE FileHandle,
 		_In_      ACCESS_MASK DesiredAccess,
@@ -1362,6 +1391,26 @@ extern "C"
 		_In_opt_  PUNICODE_STRING FileName,
 		_In_      BOOLEAN RestartScan
 		);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+__kernel_entry NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDirectoryFile (
+    _In_ HANDLE FileHandle,
+    _In_opt_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_opt_ PUNICODE_STRING FileName,
+    _In_ BOOLEAN RestartScan
+    );
+#endif
+
 
 	NTSYSAPI VOID NTAPI RtlInitUnicodeString(
 		_Out_     PUNICODE_STRING DestinationString,
@@ -4332,17 +4381,6 @@ extern "C"
 			);
 #endif
 
-#if !defined(NTDLL_DONT_INCLUDE_CRT_FUNC) && !defined(_INC_STDIO)
-	DECLSPEC_IMPORT int __cdecl _vsnprintf(LPSTR, size_t, const CHAR*, va_list);
-	DECLSPEC_IMPORT int __cdecl _vsnwprintf(LPWSTR, size_t, const WCHAR*, va_list);
-	DECLSPEC_IMPORT int __cdecl _snprintf(LPSTR, size_t, const CHAR*, ...);
-	DECLSPEC_IMPORT int __cdecl _snwprintf(LPWSTR, size_t, const WCHAR*, ...);
-	DECLSPEC_IMPORT int __cdecl _sscanf(LPSTR buffer, CHAR* format, ...);
-	DECLSPEC_IMPORT unsigned long __cdecl wcstoul(LPCWSTR buffer, WCHAR** ppEndChar, int base);
-	DECLSPEC_IMPORT unsigned __int64 __cdecl _wcstoui64(LPCWSTR buffer, WCHAR** ppEndChar, int base);
-	DECLSPEC_IMPORT __int64 __cdecl _wtoi64(LPCWSTR buffer);
-#endif
-
 #define HANDLE_DETACHED_PROCESS    (HANDLE)-1
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-2
 #define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
@@ -4514,6 +4552,220 @@ extern "C"
 			__in_ecount(Count) PULONG Ids,
 			__in ULONG Count
 		);
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_reads_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass
+    );
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenKeyEx(
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG OpenOptions
+    );
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
+_Success_(return == STATUS_SUCCESS)
+_On_failure_(_When_(return == STATUS_BUFFER_OVERFLOW || return == STATUS_BUFFER_TOO_SMALL, _Post_satisfies_(*ResultLength > Length)))
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_to_opt_(Length, *ResultLength) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    );
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_opt_ ULONG TitleIndex,
+    _In_ ULONG Type,
+    _In_reads_bytes_opt_(DataSize) PVOID Data,
+    _In_ ULONG DataSize
+    );
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryInformationFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass
+    );
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+_Must_inspect_result_
+_Ret_maybenull_
+_Post_writable_byte_size_(Size)
+PVOID
+NTAPI
+RtlAllocateHeap(
+    _In_ PVOID HeapHandle,
+    _In_opt_ ULONG Flags,
+    _In_ SIZE_T Size
+    );
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+_Success_(return != 0)
+NTSYSAPI
+LOGICAL
+NTAPI
+RtlFreeHeap(
+    _In_ PVOID HeapHandle,
+    _In_opt_ ULONG Flags,
+    _Frees_ptr_opt_ PVOID BaseAddress
+    );
+#else
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_Success_(return != 0)
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlFreeHeap(
+    _In_ PVOID HeapHandle,
+    _In_opt_ ULONG Flags,
+    _Frees_ptr_opt_ PVOID BaseAddress
+    );
+#endif // NTDDI_VERSION >= NTDDI_WIN2K
+#endif // NTDDI_VERSION >= NTDDI_WIN8
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+_Must_inspect_result_
+NTSYSAPI
+PVOID
+NTAPI
+RtlCreateHeap(
+    _In_     ULONG Flags,
+    _In_opt_ PVOID HeapBase,
+    _In_opt_ SIZE_T ReserveSize,
+    _In_opt_ SIZE_T CommitSize,
+    _In_opt_ PVOID Lock,
+    _In_opt_ PRTL_HEAP_PARAMETERS Parameters
+    );
+#endif // NTDDI_VERSION >= NTDDI_WINXP
+
+NTSYSAPI NTSTATUS NTAPI NtLoadKey(
+	IN POBJECT_ATTRIBUTES   DestinationKeyName,
+	IN POBJECT_ATTRIBUTES   HiveFileName);
+
+NTSYSAPI NTSTATUS NTAPI ZwLoadKey(
+	IN POBJECT_ATTRIBUTES   DestinationKeyName,
+	IN POBJECT_ATTRIBUTES   HiveFileName);
+
+NTSYSAPI NTSTATUS NTAPI	ZwUnloadKey(IN POBJECT_ATTRIBUTES   DestinationKeyName);
+
+NTSYSAPI NTSTATUS NTAPI	NtUnloadKey(IN POBJECT_ATTRIBUTES   DestinationKeyName);
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWriteFile(
+    _In_ HANDLE FileHandle,
+    _In_opt_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_opt_ PLARGE_INTEGER ByteOffset,
+    _In_opt_ PULONG Key
+    );
+#endif
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwTerminateProcess(
+    _In_opt_ HANDLE ProcessHandle,
+    _In_ NTSTATUS ExitStatus
+    );
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+__kernel_entry NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtDeviceIoControlFile (
+    _In_ HANDLE FileHandle,
+    _In_opt_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG IoControlCode,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength
+    );
+#endif
+
+
+typedef struct
+{
+	ULONG i[2];
+	ULONG buf[4];
+	unsigned char in[64];
+	unsigned char digest[16];
+} MD5_CTX;
+
+
+void __stdcall MD5Init(MD5_CTX* context);
+
+void __stdcall MD5Update(MD5_CTX* context,
+	unsigned char* input,
+	unsigned int inlen);
+
+void __stdcall MD5Final(MD5_CTX* context);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif

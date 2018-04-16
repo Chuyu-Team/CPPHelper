@@ -83,5 +83,15 @@ SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* excp)->long \
 	return EXCEPTION_EXECUTE_HANDLER;\
 })
 
+namespace CppHelper
+{
+
+	//代码块，分割任务
+	template<class Callback, typename... Params>
+	auto __forceinline Block(Callback&& _Callback, Params&&... args) -> decltype(_Callback(args...))
+	{
+		return _Callback(args...);
+	}
+}
 
 #endif

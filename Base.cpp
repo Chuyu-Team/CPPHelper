@@ -2902,6 +2902,25 @@ LSTATUS __fastcall ExpandEnvironmentStrings_s(
 	}
 }
 
+LSTATUS __fastcall GetVolumePathName_s(
+	LPCWSTR   lpszFileName,
+	CStringW& szLongPath
+	)
+{
+	CStringW Temp;
+
+	if (!GetVolumePathNameW(lpszFileName, Temp.GetBuffer(MAX_PATH), MAX_PATH))
+	{
+		return GetLastError_s();
+	}
+
+	Temp.ReleaseBuffer();
+
+	szLongPath = Temp;
+
+	return ERROR_SUCCESS;
+}
+
 byte Char2Hex(wchar_t ch)
 {
 	if (ch >= L'0'&&ch <= L'9')

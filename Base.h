@@ -352,6 +352,13 @@ LSTATUS __fastcall  ExpandEnvironmentStrings_s(
     _Out_ CStringW& lpszLongPath
     );
 
+//GetVolumePathNameW的安全封装
+_Check_return_
+LSTATUS __fastcall GetVolumePathName_s(
+	_In_z_  LPCWSTR   lpszFileName,
+	_Out_   CStringW& lpszLongPath
+	);
+
 //IsReparseTagNameSurrogate可以使用此函数代替下面函数功能
 //bool IsSimpleReparesPoint(DWORD dwReserved0);
 

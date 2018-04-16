@@ -6,6 +6,7 @@
 #include "rapidxml/rapidxml_utils.hpp"
 #include "rapidxml/rapidxml_print.hpp"
 #include "Base.h"
+#include "handle.h"
 //#include <comdef.h>
 //#include <atlcomcli.h>
 //#include <atlstr.h>
