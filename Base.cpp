@@ -3025,4 +3025,46 @@ LPCWSTR __cdecl FormatLongString(LPCWSTR _Format, ...)
 	return cBuffer ? pBuffer : nullptr;
 }
 
+
+LSTATUS __fastcall GetModuleFileName_s(
+	_In_opt_ HMODULE   hModule,
+	_Out_    CStringW& szModulePath
+	)
+{
+	auto AllocLength = max(szModulePath.GetAllocLength(), MAX_PATH);
+
+	for (;;)
+	{
+		auto szPath = szModulePath.GetBuffer(AllocLength);
+
+		auto Length = GetModuleFileNameW(hModule, szPath, AllocLength);
+
+		if (Length == 0)
+		{
+			return GetLastError_s();
+		}
+		else if (Length < AllocLength)
+		{
+			//获取完成
+			szModulePath.ReleaseBufferSetLength(Length);
+
+			return ERROR_SUCCESS;
+		}
+		else
+		{
+			//缓冲区不足，加大缓冲区继续
+			AllocLength = Length + 1;
+		}
+	}
+}
+
+LSTATUS __fastcall ModuleAddRef(
+	_In_ HMODULE hModule
+	)
+{
+	HMODULE hModuleTmp;
+
+	return GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)hModule, &hModuleTmp) ? ERROR_SUCCESS : GetLastError_s();
+}
+
 #pragma warning(pop)

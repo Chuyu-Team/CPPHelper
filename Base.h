@@ -359,6 +359,11 @@ LSTATUS __fastcall GetVolumePathName_s(
 	_Out_   CStringW& lpszLongPath
 	);
 
+//GetModuleFileNameW的安全封装
+LSTATUS __fastcall GetModuleFileName_s(
+	_In_opt_ HMODULE   hModule,
+	_Out_    CStringW& szModulePath
+	);
 //IsReparseTagNameSurrogate可以使用此函数代替下面函数功能
 //bool IsSimpleReparesPoint(DWORD dwReserved0);
 
@@ -401,3 +406,7 @@ UINT64 DirectGetOsVersion();
 //LocalFree释放空间
 _Check_return_
 _CRTALLOCATOR LPCWSTR __cdecl FormatLongString(_In_z_ LPCWSTR _Format, ...);
+
+LSTATUS __fastcall ModuleAddRef(
+	_In_ HMODULE hModule
+	);
