@@ -1261,6 +1261,13 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 
 	CloseHandle(hRead);
 
+	WaitForSingleObject(pi.hProcess, INFINITE);
+
+	LSTATUS lStatus = ERROR_INVALID_FUNCTION;
+
+	GetExitCodeProcess(pi.hProcess, (LPDWORD)&lStatus);
+
+
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);
 
@@ -1272,7 +1279,7 @@ LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, CString* pOutString)
 
 
 	//EXECDOSCMD.
-	return ERROR_SUCCESS;
+	return lStatus;
 }
 
 LSTATUS RunCmd(LPCWSTR FilePath, CString CmdString, BaseCallBack CallBack, LPVOID UserData)
