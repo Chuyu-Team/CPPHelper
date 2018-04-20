@@ -125,6 +125,19 @@ LSTATUS RegSetData(
 	_In_                     DWORD       cbData
 	);
 
+template<DWORD Count,class Item>
+__forceinline
+_Check_return_
+LSTATUS RegSetData(
+	_In_              HKEY    hKey,
+	_In_opt_z_        LPCWSTR ValueName,
+	_In_              DWORD   Type,
+	_In_              Item    (&Data)[Count]
+	)
+{
+	return RegSetData(hKey, ValueName, Type, Data, sizeof(Data));
+}
+
 _Check_return_
 LSTATUS RegSetData(
 	_In_       HKEY    hKey,
@@ -141,6 +154,21 @@ LSTATUS RegSetData(
 	_In_reads_bytes_(cbData) const void* Data,
 	_In_                     DWORD       cbData
 	);
+
+template<DWORD Count,class Item>
+__forceinline
+_Check_return_
+LSTATUS RegSetData(
+	_In_              HKEY    hKey,
+	_In_z_            LPCWSTR SubKeyPath,
+	_In_opt_z_        LPCWSTR ValueName,
+	_In_              DWORD   Type,
+	_In_              Item    (&Data)[Count]
+	)
+{
+	return RegSetData(hKey, SubKeyPath, ValueName, Type, Data, sizeof(Data));
+}
+
 
 _Check_return_
 LSTATUS RegSetData(

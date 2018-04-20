@@ -838,6 +838,14 @@ namespace rapidxml
                 return this->m_parent ? m_prev_attribute : 0;
         }
 
+		template<std::size_t name_size>
+		__forceinline
+		xml_attribute<Ch> *previous_attribute(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥Ä©Î²½áÊø'\0'
+			return previous_attribute(name, name_size - 1, case_sensitive);
+		}
+
         //! Gets next attribute, optionally matching attribute name. 
         //! \param name Name of attribute to find, or 0 to return next attribute regardless of its name; this string doesn't have to be zero-terminated if name_size is non-zero
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
@@ -857,6 +865,14 @@ namespace rapidxml
             else
                 return this->m_parent ? m_next_attribute : 0;
         }
+
+		template<std::size_t name_size>
+		__forceinline
+		xml_attribute<Ch> *next_attribute(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥Ä©Î²½áÊø'\0'
+			return next_attribute(name, name_size - 1, case_sensitive);
+		}
 
     private:
 
@@ -946,6 +962,14 @@ namespace rapidxml
                 return m_first_node;
         }
 
+		template<std::size_t name_size>
+		__forceinline
+		xml_node<Ch> *first_node(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥Ä©Î²½áÊø'\0'
+			return first_node(name, name_size - 1, case_sensitive);
+		}
+
         //! Gets last child node, optionally matching node name. 
         //! Behaviour is undefined if node has no children.
         //! Use first_node() to test if node has children.
@@ -969,6 +993,14 @@ namespace rapidxml
                 return m_last_node;
         }
 
+		template<std::size_t name_size>
+		__forceinline
+		xml_node<Ch> *last_node(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥×Ö·û´®Ä©Î²µÄ'\0'
+			return last_node(name, name_size - 1, case_sensitive);
+		}
+
         //! Gets previous sibling node, optionally matching node name. 
         //! Behaviour is undefined if node has no parent.
         //! Use parent() to test if node has a parent.
@@ -991,6 +1023,14 @@ namespace rapidxml
             else
                 return m_prev_sibling;
         }
+
+		template<std::size_t name_size>
+		__forceinline
+		xml_node<Ch> *previous_sibling(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥×Ö·û´®Ä©Î²µÄ'\0'
+			return previous_sibling(name, name_size - 1, case_sensitive);
+		}
 
         //! Gets next sibling node, optionally matching node name. 
         //! Behaviour is undefined if node has no parent.
@@ -1017,6 +1057,14 @@ namespace rapidxml
                 return m_next_sibling;
         }
 
+		template<std::size_t name_size>
+		__forceinline
+		xml_node<Ch> *next_sibling(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥×Ö·û´®Ä©Î²µÄ'\0'
+			return next_sibling(name, name_size - 1, case_sensitive);
+		}
+
         //! Gets first attribute of node, optionally matching attribute name.
         //! \param name Name of attribute to find, or 0 to return first attribute regardless of its name; this string doesn't have to be zero-terminated if name_size is non-zero
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
@@ -1036,6 +1084,14 @@ namespace rapidxml
             else
                 return m_first_attribute;
         }
+
+		template<std::size_t name_size>
+		__forceinline
+		xml_attribute<Ch> *first_attribute(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥×Ö·û´®Ä©Î²µÄ'\0'
+			return first_attribute(name, name_size - 1, case_sensitive);
+		}
 
         //! Gets last attribute of node, optionally matching attribute name.
         //! \param name Name of attribute to find, or 0 to return last attribute regardless of its name; this string doesn't have to be zero-terminated if name_size is non-zero
@@ -1061,6 +1117,14 @@ namespace rapidxml
             else
 				return m_last_attribute;
         }
+
+		template<std::size_t name_size>
+		__forceinline
+		 xml_attribute<Ch> *last_attribute(const Ch(&name)[name_size], bool case_sensitive) const
+		{
+			//¼õÈ¥×Ö·û´®Ä©Î²µÄ'\0'
+			return last_attribute(name, name_size - 1, case_sensitive);
+		}
 
         ///////////////////////////////////////////////////////////////////////////
         // Node modification
