@@ -131,65 +131,7 @@ namespace rapidxml
     
         // Print node
 		template<class Ch, class CStringT>
-		inline void print_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
-        {
-            // Print proper node type
-            switch (node->type())
-            {
-
-            // Document
-            case node_document:
-                print_children(out, node, flags, indent);
-                break;
-
-            // Element
-            case node_element:
-                print_element_node(out, node, flags, indent);
-                break;
-            
-            // Data
-            case node_data:
-                print_data_node(out, node, flags, indent);
-                break;
-            
-            // CDATA
-            case node_cdata:
-                print_cdata_node(out, node, flags, indent);
-                break;
-
-            // Declaration
-            case node_declaration:
-                print_declaration_node(out, node, flags, indent);
-                break;
-
-            // Comment
-            case node_comment:
-                print_comment_node(out, node, flags, indent);
-                break;
-            
-            // Doctype
-            case node_doctype:
-                print_doctype_node(out, node, flags, indent);
-                break;
-
-            // Pi
-            case node_pi:
-                print_pi_node(out, node, flags, indent);
-                break;
-
-                // Unknown
-            default:
-                assert(0);
-                break;
-            }
-            
-            // If indenting not disabled, add line break after node
-            if (!(flags & print_no_indenting))
-                out += Ch('\n');
-
-            // Return modified iterator
-            //return out;
-        }
+		inline void print_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent);
         
         // Print children of the node                               
         template<class Ch,class CStringT>
@@ -424,6 +366,68 @@ namespace rapidxml
 			out += Ch('?');
 			out += Ch('>');
         }
+
+		// Print node
+		template<class Ch, class CStringT>
+		inline void print_node(CStringT& out, const xml_node<Ch> *node, int flags, int indent)
+		{
+			// Print proper node type
+			switch (node->type())
+			{
+
+				// Document
+			case node_document:
+				print_children(out, node, flags, indent);
+				break;
+
+				// Element
+			case node_element:
+				print_element_node(out, node, flags, indent);
+				break;
+
+				// Data
+			case node_data:
+				print_data_node(out, node, flags, indent);
+				break;
+
+				// CDATA
+			case node_cdata:
+				print_cdata_node(out, node, flags, indent);
+				break;
+
+				// Declaration
+			case node_declaration:
+				print_declaration_node(out, node, flags, indent);
+				break;
+
+				// Comment
+			case node_comment:
+				print_comment_node(out, node, flags, indent);
+				break;
+
+				// Doctype
+			case node_doctype:
+				print_doctype_node(out, node, flags, indent);
+				break;
+
+				// Pi
+			case node_pi:
+				print_pi_node(out, node, flags, indent);
+				break;
+
+				// Unknown
+			default:
+				assert(0);
+				break;
+			}
+
+			// If indenting not disabled, add line break after node
+			if (!(flags & print_no_indenting))
+				out += Ch('\n');
+
+			// Return modified iterator
+			//return out;
+		}
 
     }
     //! \endcond

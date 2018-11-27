@@ -810,9 +810,9 @@ namespace rapidxml
         //! \return Pointer to document that contains this attribute, or 0 if there is no parent document.
         xml_document<Ch> *document() const
         {
-            if (m_parent)
+            if (this->m_parent)
             {
-				return m_parent->pDocument;
+				return this->m_parent->pDocument;
             }
             else
                 return 0;
