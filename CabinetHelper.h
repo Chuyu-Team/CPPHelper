@@ -276,22 +276,11 @@ static LSTATUS CabExtractFile(
 		{
 		case fdintCOPY_FILE:
 		{
-			auto FileName = StrRChrA(pfdin->psz1, NULL, '\\');
-
 			CStringA FilePath = (LPCSTR)pfdin->pv;
 
-			if (FileName)
-			{
-				FilePath.Append(pfdin->psz1, FileName - pfdin->psz1);
+			FilePath += pfdin->psz1;
 
-				CreateDirectoryW(UTF8ToUnicode(FilePath, FilePath.GetLength()), NULL);
-
-				FilePath += FileName;
-			}
-			else
-			{
-				FilePath += pfdin->psz1;
-			}
+			CreateRoot(UTF8ToUnicode(FilePath, FilePath.GetLength()));
 
 			iResult = fnFileOpen(FilePath.GetBuffer(), _O_WRONLY | _O_CREAT, 0);
 
