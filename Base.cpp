@@ -1059,18 +1059,82 @@ CString Guid2Str(const GUID& guid)
 	return Temp;
 }
 
+bool Str2Guid(LPCWSTR String, GUID& Guid)
+{
+	if (*String == L'{')
+	{
+		//{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}
+		if (wcsnlen(String, 38) != 38 || String[37] != L'}' || String[38] != L'\0')
+		{
+			return false;
+		}
+
+		++String;
+	}
+	else
+	{
+		//0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9
+		if (wcsnlen(String, 36) != 36 || String[36] != L'\0')
+		{
+			return false;
+		}
+	}
+
+
+	for (int index = 0; index != 36; ++index)
+	{
+		switch (index)
+		{
+		case 8:
+		case 13:
+		case 18:
+		case 23:
+			if (String[index] != L'-')
+				return false;
+			break;
+		default:
+			if (String[index] >= L'0' && String[index] <= L'9'
+				|| String[index] >= L'A' && String[index] <= L'F'
+				|| String[index] >= L'a' && String[index] <= L'f')
+			{
+
+			}
+			else
+			{
+				return false;
+			}
+
+			break;
+		}
+	}
+
+
+	Guid.Data1 = Char2Hex(String[0]) << 28 | Char2Hex(String[1]) << 24 | Char2Hex(String[2]) << 20 | Char2Hex(String[3]) << 16
+		| Char2Hex(String[4]) << 12 | Char2Hex(String[5]) << 8 | Char2Hex(String[6]) << 4 | Char2Hex(String[7]) << 0;
+
+	Guid.Data2 = Char2Hex(String[9]) << 12 | Char2Hex(String[10]) << 8 | Char2Hex(String[11]) << 4 | Char2Hex(String[12]) << 0;
+
+	Guid.Data3 = Char2Hex(String[14]) << 12 | Char2Hex(String[15]) << 8 | Char2Hex(String[16]) << 4 | Char2Hex(String[17]) << 0;
+
+	Guid.Data4[0] = Char2Hex(String[19]) << 4 | Char2Hex(String[20]) << 0;
+	Guid.Data4[1] = Char2Hex(String[21]) << 4 | Char2Hex(String[22]) << 0;
+	Guid.Data4[2] = Char2Hex(String[24]) << 4 | Char2Hex(String[25]) << 0;
+	Guid.Data4[3] = Char2Hex(String[26]) << 4 | Char2Hex(String[27]) << 0;
+	Guid.Data4[4] = Char2Hex(String[28]) << 4 | Char2Hex(String[29]) << 0;
+	Guid.Data4[5] = Char2Hex(String[30]) << 4 | Char2Hex(String[31]) << 0;
+	Guid.Data4[6] = Char2Hex(String[32]) << 4 | Char2Hex(String[33]) << 0;
+	Guid.Data4[7] = Char2Hex(String[34]) << 4 | Char2Hex(String[35]) << 0;
+
+	return true;
+}
+
 GUID Str2Guid(LPCWSTR String)
 {
-	/*if (*String == L'{')
-	String++;*/
 	GUID Temp = {};
 
-	auto hr=CLSIDFromString((LPOLESTR)String, &Temp);
+	auto bSuccess = Str2Guid(String, Temp);
 
-	assert(hr==S_OK);
-	/*swscanf(String, L"%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-	&Temp.Data1, &Temp.Data2, &Temp.Data3, Temp.Data4,Temp.Data4 + 1,
-	Temp.Data4 + 2, Temp.Data4 + 3, Temp.Data4 + 4, Temp.Data4 + 5, Temp.Data4 + 6, Temp.Data4 + 7);*/
+	assert(bSuccess);
 
 	return Temp;
 }
