@@ -265,9 +265,17 @@ static LSTATUS CabExtractFile(
 	if (!hfdi)
 		return ERROR_FUNCTION_FAILED;
 
+	auto szExtractPathUTF8 = Unicode2UTF8(ExtractPath);
+
+	if (szExtractPathUTF8.IsEmpty())
+		return ERROR_PATH_NOT_FOUND;
+
+	if (szExtractPathUTF8[szExtractPathUTF8.GetLength() - 1] != L'\\')
+		szExtractPathUTF8 += L'\\';
+
 	LSTATUS lStatus = ERROR_SUCCESS;
 
-	if (!FDICopy(hfdi, (LPSTR)Unicode2UTF8( CabFilePath).GetString(), "", 0, [](FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION    pfdin)->INT_PTR
+	if (!FDICopy(hfdi, (LPSTR)Unicode2UTF8( CabFilePath).GetString(), (LPSTR)"", 0, [](FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION    pfdin)->INT_PTR
 	{
 		INT_PTR iResult = 0;
 
@@ -316,7 +324,7 @@ static LSTATUS CabExtractFile(
 
 		return iResult;
 
-	}, NULL, (void*)Unicode2UTF8(ExtractPath).GetString()))
+	}, NULL, (void*)szExtractPathUTF8.GetString()))
 	{
 		lStatus = ERROR_FUNCTION_FAILED;
 	}
