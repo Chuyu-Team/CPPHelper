@@ -270,8 +270,8 @@ static LSTATUS CabExtractFile(
 	if (szExtractPathUTF8.IsEmpty())
 		return ERROR_PATH_NOT_FOUND;
 
-	if (szExtractPathUTF8[szExtractPathUTF8.GetLength() - 1] != L'\\')
-		szExtractPathUTF8 += L'\\';
+	if (szExtractPathUTF8[szExtractPathUTF8.GetLength() - 1] != '\\')
+		szExtractPathUTF8 += '\\';
 
 	LSTATUS lStatus = ERROR_SUCCESS;
 
