@@ -257,6 +257,7 @@ Start:
 		case HTTP_STATUS_PARTIAL_CONTENT:
 			//支持断点续传
 			break;
+		case HTTP_STATUS_OK:
 		case HTTP_STATUS_RESET_CONTENT:
 			//不支持断点续传
 			UsedSize = dwBytesRead = 0;
@@ -349,6 +350,7 @@ Start:
 					//支持断点续传
 					continue;
 					break;
+				case HTTP_STATUS_OK:
 				case HTTP_STATUS_RESET_CONTENT:
 					//不支持断点续传
 					UsedSize = dwBytesRead = 0;
