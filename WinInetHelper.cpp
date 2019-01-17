@@ -260,6 +260,8 @@ Start:
 		case HTTP_STATUS_OK:
 		case HTTP_STATUS_RESET_CONTENT:
 			//不支持断点续传
+		case 416:
+			//超出了实际范围
 			UsedSize = dwBytesRead = 0;
 			pStream->put_Size(0);
 			break;
@@ -353,6 +355,8 @@ Start:
 				case HTTP_STATUS_OK:
 				case HTTP_STATUS_RESET_CONTENT:
 					//不支持断点续传
+				case 416:
+					//超出了实际范围
 					UsedSize = dwBytesRead = 0;
 					pStream->put_Size(0);
 					break;
