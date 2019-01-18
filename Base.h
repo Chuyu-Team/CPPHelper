@@ -387,11 +387,19 @@ CStringA HexString2Binary(
 	);
 
 
-HRESULT HresultFromBool();
+HRESULT HresultFromBool(
+	_In_ BOOL bSuccess = FALSE
+	);
+
+HRESULT HresultFromBoolFalse();
 
 //安全版GetLastError，必定返回一个错误代码。
 _Ret_
-LSTATUS GetLastError_s();
+LSTATUS GetLastError_s(
+	_In_ BOOL bSuccess = FALSE
+	);
+
+LSTATUS GetLastErrorFromBoolFalse();
 
 //检测是否是兼容模式
 _Check_return_ _Success_(return !=-1)

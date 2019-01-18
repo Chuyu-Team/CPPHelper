@@ -3015,7 +3015,15 @@ byte Char2Hex(wchar_t ch)
 	}
 }
 
-HRESULT HresultFromBool()
+HRESULT HresultFromBool(BOOL bSuccess)
+{
+	if (bSuccess)
+		return S_OK;
+	else
+		return HresultFromBoolFalse();
+}
+
+HRESULT HresultFromBoolFalse()
 {
 	auto lStatus = GetLastError();
 
@@ -3033,7 +3041,15 @@ HRESULT HresultFromBool()
 	}
 }
 
-LSTATUS GetLastError_s()
+LSTATUS GetLastError_s(BOOL bSuccess)
+{
+	if (bSuccess)
+		return ERROR_SUCCESS;
+	else
+		return GetLastErrorFromBoolFalse();
+}
+
+LSTATUS GetLastErrorFromBoolFalse()
 {
 	auto lStatus = GetLastError();
 
