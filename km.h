@@ -4479,6 +4479,23 @@ NtQueryDirectoryFile (
 		);
 #endif
 
+	//
+	// Firmware Boot File Path
+	//
+	typedef struct _FILE_PATH
+	{
+		ULONG Version;
+		ULONG Length;
+		ULONG Type;
+		WCHAR FilePath[1];
+	} FILE_PATH, *PFILE_PATH;
+
+	NTSYSCALLAPI NTSTATUS NTAPI NtTranslateFilePath(
+		PFILE_PATH InputFilePath,
+		ULONG OutputType,
+		PFILE_PATH OutputFilePath,
+		PULONG pOutputFilePathLength
+		);
 	//UEFI支持相关函数
 
 	NTSYSAPI NTSTATUS NTAPI ZwQueryBootEntryOrder(
@@ -4497,15 +4514,20 @@ NtQueryDirectoryFile (
 		WCHAR HeadlessRedirection[1];
 	} BOOT_OPTIONS, *PBOOT_OPTIONS;
 
-
+	//
+	// Firmware Boot Entry
+	//
 	typedef struct _BOOT_ENTRY
 	{
-		//0
-		ULONG NextBootEntry;
-		//4
-
-
-	}BOOT_ENTRY, *PBOOT_ENTRY;
+		ULONG Version;
+		ULONG Length;
+		ULONG Id;
+		ULONG Attributes;
+		ULONG FriendlyNameOffset;
+		ULONG BootFilePathOffset;
+		ULONG OsOptionsLength;
+		CHAR OsOptions[1];
+	} BOOT_ENTRY, *PBOOT_ENTRY;
 
 	NTSYSAPI NTSTATUS NTAPI ZwQueryBootOptions(
 			OUT PBOOT_OPTIONS BootOptions,
