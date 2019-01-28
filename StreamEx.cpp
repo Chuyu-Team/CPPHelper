@@ -338,7 +338,7 @@ IReadWriteStream* StreamCreate(LPCWSTR FilePath,
 	DWORD dwCreationDisposition,
 	DWORD dwFlagsAndAttributes )
 {
-	auto hFile = CreateFile(FilePath, dwDesiredAccess, dwShareMode,NULL, dwCreationDisposition, dwFlagsAndAttributes| FILE_OPTION,0);
+	auto hFile = CreateFile(FilePath, dwDesiredAccess, dwShareMode,NULL, dwCreationDisposition, dwFlagsAndAttributes| FILE_FLAG_BACKUP_SEMANTICS,0);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return NULL;
 

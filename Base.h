@@ -32,11 +32,14 @@
 
 
 #ifdef ENABLE_BACKUP_RESTORE
-#define FILE_OPTION FILE_FLAG_BACKUP_SEMANTICS
-#define REG_OPTION REG_OPTION_BACKUP_RESTORE
+	#if ENABLE_BACKUP_RESTORE >=2
+	//该模式根据实际情况动态调整
+	extern DWORD REG_OPTION;
+	#else
+	#define REG_OPTION REG_OPTION_BACKUP_RESTORE
+	#endif
 #else
-#define FILE_OPTION 0
-#define REG_OPTION 0
+	#define REG_OPTION 0
 #endif
 
 _Success_(return == ERROR_SUCCESS)

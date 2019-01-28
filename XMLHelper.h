@@ -353,7 +353,7 @@ namespace rapidxml
 		_In_   xml_document<Ch>* pDocument
 		)
 	{
-		CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+		CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 		if (hFile.IsInvalid())
 			return GetLastError();
 

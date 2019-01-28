@@ -8,6 +8,12 @@
 #pragma warning(push)
 #pragma warning(disable: 28251)
 
+#ifdef ENABLE_BACKUP_RESTORE
+	#if ENABLE_BACKUP_RESTORE >=2
+	extern DWORD REG_OPTION = 0;
+	#endif
+#endif
+
 //¹ýÂËÖ¸¶¨×Ö·û
 LPCWSTR StrFilter(LPCWSTR SrcStr, LPCWSTR IgnoreStr)
 {
@@ -848,7 +854,7 @@ const BYTE FAT_PBR[] =
 
 LSTATUS DiskUpdateBootCode(LPCWSTR BootPartition)
 {
-	CHFile hRootPath = CreateFile(BootPartition, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+	CHFile hRootPath = CreateFile(BootPartition, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError_s();
@@ -957,7 +963,7 @@ LSTATUS DiskUpdateBootCode(LPCWSTR BootPartition)
 		return GetLastError_s();
 	}
 
-	hRootPath = CreateFile(StrFormat(L"\\\\.\\PhysicalDrive%u", PhysicalOffsets.PhysicalOffset->DiskNumber), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+	hRootPath = CreateFile(StrFormat(L"\\\\.\\PhysicalDrive%u", PhysicalOffsets.PhysicalOffset->DiskNumber), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError_s();
@@ -1024,7 +1030,7 @@ LSTATUS DiskUpdateBootCode(LPCWSTR BootPartition)
 
 LSTATUS DiskGetPartitionStyle(LPCWSTR Partition, PARTITION_STYLE* pPartitionStyle)
 {
-	CHFile hRootPath = CreateFile(Partition, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+	CHFile hRootPath = CreateFile(Partition, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 
 	if (hRootPath.IsInvalid())
 		return GetLastError_s();
@@ -1985,7 +1991,7 @@ LSTATUS GetHashByFilePath(LPCWSTR FilePath, ALG_ID Algid, BYTE* pHashData, DWORD
 			FILE_SHARE_READ,
 			NULL,
 			OPEN_EXISTING,
-			FILE_OPTION,
+			FILE_FLAG_BACKUP_SEMANTICS,
 			NULL);
 
 		if (hFile.IsInvalid())
@@ -2210,7 +2216,7 @@ LSTATUS CreateFileByData(LPCWSTR FilePath, const void* Data, DWORD ccbData)
 
 	LSTATUS lStatus = ERROR_SUCCESS;
 
-	auto thFile = CreateFile(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL| FILE_OPTION, 0);
+	auto thFile = CreateFile(FilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL| FILE_FLAG_BACKUP_SEMANTICS, 0);
 
 	if (thFile != INVALID_HANDLE_VALUE)
 	{
@@ -2312,7 +2318,7 @@ HANDLE OpenDriver(LPCWSTR DriverPath, DWORD dwDesiredAccess)
 	if (_RootPath[_RootPath.GetLength() - 1] == L'\\')
 		_RootPath.ReleaseBufferSetLength(_RootPath.GetLength() - 1);
 
-	return CreateFileW(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_OPTION, 0);
+	return CreateFileW(_RootPath, dwDesiredAccess, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 }
 
 LSTATUS GetDriverLayout(HANDLE hDevice, CStringA& Buffer)
@@ -2663,7 +2669,7 @@ bool IsProcExists(HANDLE hFile, LPCSTR ProcName)
 
 DWORD GetFileArchitecture(LPCWSTR FilePath)
 {
-	CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_OPTION, NULL);
+	CHFile hFile = CreateFile(FilePath, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
 	if (hFile.IsInvalid())
 		return PROCESSOR_ARCHITECTURE_UNKNOWN;

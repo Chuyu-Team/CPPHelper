@@ -6,11 +6,6 @@
 
 
 #define MaxRegValueName 0x4000
-#ifdef ENABLE_BACKUP_RESTORE
-#define REG_OPTION REG_OPTION_BACKUP_RESTORE
-#else
-#define REG_OPTION 0
-#endif
 
 #pragma warning(push)
 #pragma warning(disable: 28251)
