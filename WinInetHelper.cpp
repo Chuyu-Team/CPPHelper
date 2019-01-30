@@ -172,12 +172,12 @@ Start:
 	hr=Info.InternetOpenW(lpszAgent);
 	
 	if (hr!=S_OK)
-		return HresultFromBool();
+		return hr;
 
 	hr=Info.InternetConnectW();
 
 	if (hr!=S_OK)
-		return HresultFromBool();
+		return hr;
 
 		
 
@@ -185,7 +185,7 @@ Start:
 	hr=Info.HttpOpenRequestW();
 
 	if (hr!=S_OK)
-		return HresultFromBool();
+		return hr;
 
 	
 	UINT64 FileSize = 0, UsedSize = 0;
