@@ -1609,8 +1609,19 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 	{
 		return hr;
 	}
+
+	struct MediaInfo
+	{
+		IMAPI_MEDIA_PHYSICAL_TYPE Type;
+		LONG FreeMediaBlocks;
+	};
 	
-	const IMAPI_MEDIA_PHYSICAL_TYPE MediaTypes[] = { IMAPI_MEDIA_TYPE_DVDPLUSR ,IMAPI_MEDIA_TYPE_DVDDASHR, IMAPI_MEDIA_TYPE_DVDPLUSR_DUALLAYER ,IMAPI_MEDIA_TYPE_DVDDASHR_DUALLAYER,IMAPI_MEDIA_TYPE_HDDVDROM };
+	const MediaInfo MediaTypes[]=
+	{
+		{ IMAPI_MEDIA_TYPE_DVDROM, 2295104 },
+		{ IMAPI_MEDIA_TYPE_DVDPLUSR_DUALLAYER, 4173824 },
+		{ IMAPI_MEDIA_TYPE_HDDVDROM, 62500864 },
+	};
 
 	std::vector<IBootOptions*> vBootOptions;
 
@@ -1700,9 +1711,11 @@ HRESULT IsoCreateFileByPath(LPCWSTR pIsoPath, LPCWSTR SrcDir, LPCWSTR VolumeName
 	//添加一个目录树到镜像
 	CComBSTR TreeRoot(pSrcDir);
 
-	for (int i = 0;i != ArraySize(MediaTypes);++i)
+	for(auto& Info : MediaTypes)
 	{
-		pSystemImage->ChooseImageDefaultsForMediaType(MediaTypes[i]);
+		pSystemImage->ChooseImageDefaultsForMediaType(Info.Type);
+
+		pSystemImage->put_FreeMediaBlocks(Info.FreeMediaBlocks);
 
 		hr = pRootDirItem->AddTree(TreeRoot, FALSE);
 
