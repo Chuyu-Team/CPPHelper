@@ -54,6 +54,15 @@ BOOL IniDeleteString(LPCWSTR FilePath, LPCWSTR KeyPath, LPCWSTR ValueName)
 	return WritePrivateProfileStringW(KeyPath, ValueName, NULL, FilePath);
 }
 
+
+BOOL IniDeleteSection(
+	LPCWSTR FilePath,
+	LPCWSTR KeyPath
+	)
+{
+	return WritePrivateProfileStringW(KeyPath, NULL, NULL, FilePath);
+}
+
 BOOL IniGetSectionNames(LPCWSTR FilePath, CString& Names)
 {
 	int cchData = Names.GetAllocLength()>100 ? Names.GetAllocLength() : 100;

@@ -22,7 +22,7 @@ _Check_return_
 BOOL IniWriteString(
 	_In_z_     LPCWSTR FilePath,
 	_In_z_     LPCWSTR KeyPath,
-	_In_z_     LPCWSTR ValueName,
+	_In_opt_z_ LPCWSTR ValueName,
 	_In_opt_z_ LPCWSTR Str
 	);
 
@@ -37,9 +37,15 @@ BOOL IniWriteBinaryData(
 
 _Check_return_
 BOOL IniDeleteString(
+	_In_z_     LPCWSTR FilePath,
+	_In_z_     LPCWSTR KeyPath,
+	_In_opt_z_ LPCWSTR ValueName
+	);
+
+_Check_return_
+BOOL IniDeleteSection(
 	_In_z_ LPCWSTR FilePath,
-	_In_z_ LPCWSTR KeyPath,
-	_In_z_ LPCWSTR ValueName
+	_In_z_ LPCWSTR KeyPath
 	);
 
 _Check_return_
