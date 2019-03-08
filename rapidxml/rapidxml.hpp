@@ -383,6 +383,18 @@ namespace rapidxml
             return node;
         }
 
+		template<std::size_t name_size>
+		xml_node<Ch> *allocate_node_static(node_type type, const Ch(&name)[name_size], const Ch *value, std::size_t value_size)
+		{
+			return allocate_node(type, name, value, name_size - 1, value_size);
+		}
+
+		template<std::size_t name_size, std::size_t value_size>
+		xml_node<Ch> *allocate_node_static(node_type type, const Ch(&name)[name_size], const Ch(&value)[value_size])
+		{
+			return allocate_node(type, name, value, name_size - 1, value_size - 1);
+		}
+
         //! Allocates a new attribute from the pool, and optionally assigns name and value to it.
         //! If the allocation request cannot be accomodated, this function will throw <code>std::bad_alloc</code>.
         //! If exceptions are disabled by defining RAPIDXML_NO_EXCEPTIONS, this function
@@ -413,6 +425,18 @@ namespace rapidxml
             }
             return attribute;
         }
+
+		template<std::size_t name_size, std::size_t value_size>
+		xml_attribute<Ch> *allocate_attribute_static(const Ch(&name)[name_size], const Ch(&value)[value_size])
+		{
+			return allocate_attribute(name, value, name_size - 1, value_size - 1);
+		}
+
+		template<std::size_t name_size>
+		xml_attribute<Ch> *allocate_attribute_static(const Ch(&name)[name_size], const Ch *value, std::size_t value_size)
+		{
+			return allocate_attribute(name, value, name_size - 1, value_size);
+		}
 
 		Ch *allocate_string(const Ch *source)
 		{
