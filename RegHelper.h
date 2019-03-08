@@ -3,6 +3,36 @@
 #include <atlstr.h>
 
 
+#define YY_range_based_for_registry_key_start(hKey, SubKeyName)                                                                          \
+{                                                                                                                                        \
+    wchar_t SubKeyName[256];                                                                                                             \
+    LSTATUS lRangeBasedForStatus;                                                                                                        \
+    for(DWORD dwIndex=0;(lRangeBasedForStatus = RegEnumKeyW(hKey, dwIndex, SubKeyName, _countof(SubKeyName))) == ERROR_SUCCESS;++dwIndex)
+
+
+#define YY_range_based_for_registry_key_end()                                                                                            \
+}
+
+#define YY_range_based_for_registry_key_end_with_errorcode(errorcode)                                                                    \
+    errorcode = lRangeBasedForStatus;                                                                                                    \
+}
+
+
+
+#define YY_range_based_for_registry_value_start(hKey, szValueName, dwType)                                                                  \
+{                                                                                                                                           \
+    wchar_t szValueName[16384];                                                                                                             \
+    LSTATUS lRangeBasedForStatus;                                                                                                           \
+    DWORD cchValueName;                                                                                                                     \
+    DWORD dwType;                                                                                                                           \
+    for(DWORD dwIndex=0;(cchValueName = _countof(szValueName)),(lRangeBasedForStatus = RegEnumValueW(hKey, dwIndex, szValueName, &cchValueName, NULL, &dwType, NULL, NULL)) == ERROR_SUCCESS;++dwIndex)
+
+#define YY_range_based_for_registry_value_end YY_range_based_for_registry_key_end
+
+#define YY_range_based_for_registry_value_end_with_errorcode YY_range_based_for_registry_key_end_with_errorcode
+
+
+
 _Check_return_
 LSTATUS RegGetData(
 	_In_                                          HKEY    hKey,

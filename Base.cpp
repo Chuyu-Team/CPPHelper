@@ -1866,6 +1866,34 @@ LSTATUS Binary2Base64(const void* Src, DWORD ccbSrc, CString& Base64String)
 	return ERROR_SUCCESS;
 }
 
+LSTATUS Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCSTR Base64String, DWORD cchString)
+{
+	if (cchString == -1)
+		cchString = StrLen(Base64String);
+
+	DWORD nLenOut = ccbBinary;
+
+	if (!CryptStringToBinaryA(
+		Base64String, cchString,
+		CRYPT_STRING_BASE64,
+		pBinary, &ccbBinary,
+		NULL,        // pdwSkip (not needed)
+		NULL         // pdwFlags (not needed)
+	))
+	{
+		auto lStatus = GetLastError_s();
+
+		if (lStatus == ERROR_MORE_DATA)
+		{
+			ccbBinary = cchString;
+		}
+
+		return lStatus;
+	}
+
+	return ERROR_SUCCESS;
+}
+
 LSTATUS Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWORD cchString)
 {
 	if (cchString == -1)
@@ -1894,7 +1922,9 @@ LSTATUS Base642Binary(BYTE* pBinary, DWORD& ccbBinary, LPCWSTR Base64String, DWO
 	return ERROR_SUCCESS;
 }
 
-LSTATUS Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
+
+template<class Ch>
+LSTATUS Base642BinaryT(CStringA& Binary, const Ch* Base64String, DWORD cchString)
 {
 	if (cchString == -1)
 		cchString = StrLen(Base64String);
@@ -1915,6 +1945,16 @@ LSTATUS Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
 	Binary.ReleaseBufferSetLength(nLenOut);
 
 	return ERROR_SUCCESS;
+}
+
+LSTATUS Base642Binary(CStringA& Binary, LPCSTR Base64String, DWORD cchString)
+{
+	return Base642BinaryT(Binary, Base64String, cchString);
+}
+
+LSTATUS Base642Binary(CStringA& Binary, LPCWSTR Base64String, DWORD cchString)
+{
+	return Base642BinaryT(Binary, Base64String, cchString);
 }
 
 void ReverseBinary(BYTE* pBinary, DWORD ccbBinary)

@@ -16,7 +16,30 @@ const BYTE BomUTF16[] = { 0xff,0xfe };
 //UTF8文件头
 const BYTE BomUTF8[] = { 0xEF ,0xBB ,0xBF };
 
+#define YY_range_base_for_find_file_start(szFindPath, _FindFileData)         \
+{                                                                            \
+    WIN32_FIND_DATAW ___range_base_for_find_file_data;                       \
+    WIN32_FIND_DATAW& _FindFileData = ___range_base_for_find_file_data;      \
+    CHFileFind hFileFind = FindFirstFileW(szFindPath, &_FindFileData);       \
+    if(hFileFind.IsInvalid() == false)                                       \
+	{                                                                        \
+        do
 
+
+#define YY_range_base_for_find_file_end()                                    \
+        while (FindNextFileW(hFileFind, &___range_base_for_find_file_data)); \
+	}                                                                        \
+}
+
+
+#define YY_range_base_for_find_file_end_with_errorcode(errorcode)                                                                     \
+        while (FindNextFileW(hFileFind, &___range_base_for_find_file_data) ? true : (errorcode = GetLastErrorFromBoolFalse(),false)); \
+	}                                                                                                                                 \
+    else                                                                                                                              \
+    {                                                                                                                                 \
+        errorcode = GetLastErrorFromBoolFalse();                                                                                      \
+    }                                                                                                                                 \
+}
 
 //判断问是否是.以及..
 _Check_return_
