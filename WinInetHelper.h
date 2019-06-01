@@ -106,25 +106,28 @@ public:
 		_In_     DWORD   dwAccessType    = INTERNET_OPEN_TYPE_PRECONFIG,
 		_In_opt_ LPCWSTR lpszProxy       = NULL,
 		_In_opt_ LPCWSTR lpszProxyBypass = INTERNET_INVALID_PORT_NUMBER,
-		_In_     DWORD   dwFlags         = 0
+		_In_     DWORD   dwFlags         = 0,
+		_In_     DWORD   TimeOut         = 2 * 60 * 1000
 		)
 	{
 		Close();
 
 		if (m_hSession = ::InternetOpenW(lpszAgent, dwAccessType, lpszProxy, lpszProxyBypass, dwFlags))
 		{
-			DWORD TimeOut = 5 * 1000;
-
-			::InternetSetOption(m_hSession, INTERNET_OPTION_CONNECT_TIMEOUT,&TimeOut,sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_DISCONNECTED_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_FROM_CACHE_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_LISTEN_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
-			::InternetSetOption(m_hSession, INTERNET_OPTION_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			
+			if (TimeOut)
+			{
+				::InternetSetOption(m_hSession, INTERNET_OPTION_CONNECT_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_CONTROL_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_DATA_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_DISCONNECTED_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_FROM_CACHE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_LISTEN_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_RECEIVE_TIMEOUT, &TimeOut, sizeof(TimeOut));
+				::InternetSetOption(m_hSession, INTERNET_OPTION_SEND_TIMEOUT, &TimeOut, sizeof(TimeOut));
+			}
 		}
 		return m_hSession ? S_OK : HresultFromBool();
 	}
@@ -184,10 +187,28 @@ public:
 		_In_reads_opt_(dwHeadersLength) LPCWSTR lpszHeaders,
 		_In_ DWORD dwHeadersLength,
 		_In_reads_bytes_opt_(dwOptionalLength) LPVOID lpOptional=NULL,
-		_In_ DWORD dwOptionalLength=0
+		_In_ DWORD dwOptionalLength=0,
+		_In_ DWORD TryCount = 20 //服务器连接失败时的重试次数
 		)
 	{
-		return ::HttpSendRequestW(hUrlFile, lpszHeaders, dwHeadersLength, lpOptional, dwOptionalLength) ? S_OK : HresultFromBool();
+		for (;;)
+		{
+			if (::HttpSendRequestW(hUrlFile, lpszHeaders, dwHeadersLength, lpOptional, dwOptionalLength))
+			{
+				return S_OK;
+			}
+
+			auto lStatus = GetLastError();
+
+			if (ERROR_FILE_NOT_FOUND == lStatus && TryCount)
+			{
+				--TryCount;
+				
+				continue;
+			}
+
+			return lStatus != ERROR_SUCCESS ? __HRESULT_FROM_WIN32(lStatus) : E_FAIL;
+		}
 	}
 
 	HRESULT GetStatusCode(
