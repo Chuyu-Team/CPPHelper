@@ -106,6 +106,15 @@ CString Guid2Str(
 	);
 
 
+bool Str2Guid(
+	_In_z_ LPCWSTR String,
+	_Out_  GUID&   Guid
+	);
+
+bool Str2Guid(
+	_In_z_ LPCSTR String,
+	_Out_  GUID&  Guid
+	);
 
 GUID Str2Guid(
 	_In_z_ LPCWSTR String

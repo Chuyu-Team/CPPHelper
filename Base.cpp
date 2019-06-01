@@ -1065,12 +1065,13 @@ CString Guid2Str(const GUID& guid)
 	return Temp;
 }
 
-bool Str2Guid(LPCWSTR String, GUID& Guid)
+template<class Ch>
+bool Str2Guid_t(const Ch* String, GUID& Guid)
 {
 	if (*String == L'{')
 	{
 		//{0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9}
-		if (wcsnlen(String, 38) != 38 || String[37] != L'}' || String[38] != L'\0')
+		if (StrLen(String) != 38 || String[37] != Ch('}') || String[38] != Ch('\0'))
 		{
 			return false;
 		}
@@ -1080,7 +1081,7 @@ bool Str2Guid(LPCWSTR String, GUID& Guid)
 	else
 	{
 		//0ce4991b-e6b3-4b16-b23c-5e0d9250e5d9
-		if (wcsnlen(String, 36) != 36 || String[36] != L'\0')
+		if (StrLen(String) != 36 || String[36] != Ch('\0'))
 		{
 			return false;
 		}
@@ -1095,13 +1096,13 @@ bool Str2Guid(LPCWSTR String, GUID& Guid)
 		case 13:
 		case 18:
 		case 23:
-			if (String[index] != L'-')
+			if (String[index] != Ch('-'))
 				return false;
 			break;
 		default:
-			if (String[index] >= L'0' && String[index] <= L'9'
-				|| String[index] >= L'A' && String[index] <= L'F'
-				|| String[index] >= L'a' && String[index] <= L'f')
+			if (String[index] >= Ch('0') && String[index] <= ('9')
+				|| String[index] >= Ch('A') && String[index] <= Ch('F')
+				|| String[index] >= Ch('a') && String[index] <= Ch('f'))
 			{
 
 			}
@@ -1133,6 +1134,17 @@ bool Str2Guid(LPCWSTR String, GUID& Guid)
 
 	return true;
 }
+
+bool Str2Guid(LPCWSTR String, GUID& Guid)
+{
+	return Str2Guid_t(String, Guid);
+}
+
+bool Str2Guid(LPCSTR String, GUID& Guid)
+{
+	return Str2Guid_t(String, Guid);
+}
+
 
 GUID Str2Guid(LPCWSTR String)
 {
