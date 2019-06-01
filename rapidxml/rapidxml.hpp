@@ -1003,7 +1003,9 @@ namespace rapidxml
         //! \return Pointer to found child, or 0 if not found.
         xml_node<Ch> *last_node(const Ch *name = 0, std::size_t name_size = 0, bool case_sensitive = true) const
         {
-            assert(m_first_node);  // Cannot query for last child if node has no children
+			if (!m_first_node)
+				return NULL;
+
             if (name)
             {
                 if (name_size == 0)

@@ -28,21 +28,12 @@ namespace rapidxml
         // Internal character operations
     
         // Copy characters from given range to given output iterator
-		template<class Ch, class CStringT>
-		inline void copy_chars(const Ch *Str, DWORD cStr, CStringT& out)
-		{
-			DWORD OldLength= out.GetLength();
-
-			memcpy(out.GetBufferSetLength(OldLength + cStr)+ OldLength, Str, cStr*sizeof(Ch));
-		}
-   //     template<class Ch, class CStringT>
-   //     inline void copy_chars(const Ch *begin, const Ch *end, CStringT& out)
-   //     {
-			//copy_chars(begin, end- begin, out);
-   //         //while (begin != end)
-   //         //    out+= *begin++;
-   //         //return out;
-   //     }
+        template<class Ch, class CStringT>
+        inline void copy_chars(const Ch *begin, const Ch *end, CStringT& out)
+        {
+            while (begin != end)
+                out+= *begin++;
+        }
         
         // Copy characters from given range to given output iterator and expand
         // characters into references (&lt; &gt; &apos; &quot; &amp;)
@@ -109,8 +100,6 @@ namespace rapidxml
 		template<class Ch, class CStringT>
 		inline void fill_chars(CStringT& out, int n, Ch ch)
         {
-			//加大缓冲区，防止内存抖动
-			out.GetBuffer(out.GetLength() + n);
             for (int i = 0; i != n; ++i)
 				out+= ch;
            // return out;
@@ -151,23 +140,9 @@ namespace rapidxml
                 if (attribute->name() && attribute->value())
                 {
                     // Print attribute name
-                    //out += Ch(' ');
-                    //out.Append(attribute->name(), attribute->name_size());
-
-					//out += Ch('=');// , ++out;
-
-					DWORD OldLength = out.GetLength();
-					DWORD NameSize= attribute->name_size();
-
-					Ch* pData=out.GetBufferSetLength(OldLength+3+ NameSize)+ OldLength;
-
-					*pData = Ch(' ');
-					++pData;
-					memcpy(pData, attribute->name(), NameSize*sizeof(Ch));
-					pData += NameSize;
-					*pData = Ch('=');
-					++pData;
-					*pData = Ch('"');
+                    out += Ch(' ');
+					copy_chars(attribute->name(), attribute->name() + attribute->name_size(), out);
+					out += Ch('=');// , ++out;
 
                     // Print attribute value using appropriate quote type
                    // if (/*find_char<Ch, Ch('"')>(attribute->value(), attribute->value() + attribute->value_size())*/StrChrNW(attribute->value(),L'"', attribute->value_size()))
@@ -178,7 +153,7 @@ namespace rapidxml
       //              }
       //              else
                     {
-						//out += Ch('"');// , ++out;
+						out += Ch('"');// , ++out;
                         copy_and_expand_chars(attribute->value(), attribute->value() + attribute->value_size(), Ch('\''), out);
 						out += Ch('"');// , ++out;
                     }
@@ -216,7 +191,7 @@ namespace rapidxml
             out += Ch('T');
             out += Ch('A');
             out += Ch('[');
-			out.Append(node->value() , node->value_size());
+			copy_chars(node->value(), node->value() + node->value_size(), out);
             out += Ch(']');
             out += Ch(']');
             out += Ch('>');
@@ -233,8 +208,7 @@ namespace rapidxml
                 fill_chars(out, indent, Ch('\t'));
 
 			out += Ch('<');
-			out.Append(node->name() , node->name_size());
-			//copy_chars(node->name(), node->name() + node->name_size(), out);
+			copy_chars(node->name(), node->name() + node->name_size(), out);
             print_attributes(out, node, flags);
             
             // If node is childless
@@ -275,8 +249,7 @@ namespace rapidxml
                 // Print node end
 				out += Ch('<');
 				out += Ch('/');
-                //copy_chars(node->name(), node->name() + node->name_size(), out);
-				out.Append(node->name(), node->name_size());
+                copy_chars(node->name(), node->name() + node->name_size(), out);
 
 				out += Ch('>');
             }
@@ -319,7 +292,7 @@ namespace rapidxml
 			out += Ch('-');
 			out += Ch('-');
 
-			out.Append(node->value(), node->value_size());
+			copy_chars(node->value(), node->value() + node->value_size(), out);
             
 			out += Ch('-');
 			out += Ch('-');
@@ -345,7 +318,7 @@ namespace rapidxml
 			out += Ch('E');
 			out += Ch(' ');
 
-			out.Append(node->value(), node->value_size());
+			copy_chars(node->value(), node->value() + node->value_size(), out);
 			out += Ch('>');
         }
 
@@ -359,10 +332,10 @@ namespace rapidxml
 
 			out += Ch('<');
 			out += Ch('?');
-			out.Append(node->name(), node->name_size());
+			copy_chars(node->name(), node->name() + node->name_size(), out);
 
 			out += Ch(' ');
-			out.Append(node->value(), node->value_size());
+			copy_chars(node->value(), node->value() + node->value_size(), out);
 			out += Ch('?');
 			out += Ch('>');
         }
